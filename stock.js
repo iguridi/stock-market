@@ -6,7 +6,7 @@ const offerMargin = () => randomInt(0, 10);
 const genArrayRandom = (length, min, max) =>
   Array.from({ length }, () => randomInt(min, max));
 
-const genArray = (length, number) => Array.from({ length }, () => number);
+const genArray = (length, content) => Array.from({ length }, () => content);
 
 const TIME = 150;
 const NUMBER_OF_OFFERS = 10;
@@ -67,13 +67,7 @@ const intervalGraph = (market) => {
   const maxHistory = market.maxHistory;
   const minHistory = market.minHistory;
   const price = Math.max(...maxHistory, ...minHistory);
-  const grid = [];
-  for (let i = 0; i < price; i++) {
-    grid.push([]);
-    for (let j = 0; j < TIME; j++) {
-      grid[i].push(" ");
-    }
-  }
+  const grid = Array.from({ length: price }, () => genArray(TIME, " "));
   for (let t = 0; t < TIME; t++) {
     const minPrice = minHistory[t];
     const maxPrice = maxHistory[t];
@@ -83,11 +77,10 @@ const intervalGraph = (market) => {
     grid[price - minPrice][t] = "+";
     grid[price - maxPrice][t] = "+";
   }
+
   console.log(`\nprice(${price})`);
   for (let i = 0; i < grid.length; i++) {
-    const row = grid[i];
-    const stringRow = row.join("");
-    console.log(" |", stringRow);
+    console.log(" |", grid[i].join(""));
   }
   console.log(" |_" + "_".repeat(TIME) + `__ time(${TIME})`);
 };
