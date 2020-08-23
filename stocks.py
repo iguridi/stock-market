@@ -2,19 +2,19 @@ from random import randint, random
 
 
 def gen_sell_price():
-    return randint(3, 23)
+    return randint(25, 50)
 
 
 def gen_buy_price():
-    return randint(0, 20)
+    return randint(4, 25)
 
 
-TIME = 150
+TIME = 100
 
 
 class Market:
-    buying = [gen_buy_price() for _ in range(5)]
-    selling = [gen_sell_price() for _ in range(5)]
+    buying = [gen_buy_price() for _ in range(10)]
+    selling = [gen_sell_price() for _ in range(10)]
 
     max_history = [0 for _ in range(TIME)]
     min_history = [100 for _ in range(TIME)]
@@ -51,21 +51,20 @@ class Market:
         self.history[time] = price
 
     def new_buy_offer(self):
-        price = self.buy_price - gen_buy_price() // 2
+        price = self.buy_price - randint(0, 10)
         self.buying.append(price)
 
     def new_sell_offer(self):
-        price = gen_sell_price() // 2 + self.sell_price
+        price = randint(0, 10) + self.sell_price
         self.selling.append(price)
 
 
 def interval_graph(market):
     max_history = market.max_history
     min_history = market.min_history
-    time = len(max_history)
     price = max(*max_history, *min_history)
-    grid = [[" " for _ in range(time)] for _ in range(price)]
-    for t in range(time):
+    grid = [[" " for _ in range(TIME)] for _ in range(price)]
+    for t in range(TIME):
         min_price = min_history[t]
         max_price = max_history[t]
         for p in range(min_price, max_price):
@@ -76,27 +75,50 @@ def interval_graph(market):
     print("\nprice")
     for string in ["".join(i) for i in grid]:
         print("  |", string)
-    print("  |_" + "_" * time + "__ time")
+    print("  |_" + "_" * TIME + "__ time")
+
+
+def last_price_graph(market):
+    history = market.history
+    price = max(history)
+    grid = [[" " for _ in range(TIME)] for _ in range(price)]
+    for t in range(TIME):
+        p = history[t]
+        grid[-p][t] = "*"
+
+    print(f"\nprice({price})")
+    for string in ["".join(i) for i in grid]:
+        print("  |", string)
+    print("  |_" + "_" * TIME + "__ time")
 
 
 m = Market()
 
 for t in range(TIME):
+    delta = m.delta
+    print("| buy price:", m.buy_price, "| sell price:", m.sell_price, "| delta:", delta)
     if random() < 0.5:
+        m.buy(t)
+        m.new_sell_offer()
+    else:
+        m.sell(t)
+        m.new_buy_offer()
+    if delta is None:
+        continue
+    if delta < 0:
+        m.buy(t)
         m.new_sell_offer()
         m.buy(t)
-    else:
-        m.new_buy_offer()
-        m.sell(t)
-    print(m.delta)
-    if m.delta is not None and m.delta > 0:
         m.new_sell_offer()
-        m.buy(t)
-    else:
+    if delta > 0:
+        m.sell(t)
         m.new_buy_offer()
         m.sell(t)
+        m.new_buy_offer()
 
 
 print(m.max_history)
 print(m.min_history)
 interval_graph(m)
+print(m.history)
+last_price_graph(m)
