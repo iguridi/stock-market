@@ -13,8 +13,8 @@ TIME = 100
 
 
 class Market:
-    buying = [gen_buy_price() for _ in range(10)]
-    selling = [gen_sell_price() for _ in range(10)]
+    buying = [gen_buy_price() for _ in range(5)]
+    selling = [gen_sell_price() for _ in range(5)]
 
     max_history = [0 for _ in range(TIME)]
     min_history = [100 for _ in range(TIME)]
@@ -51,7 +51,7 @@ class Market:
         self.history[time] = price
 
     def new_buy_offer(self):
-        price = self.buy_price - randint(0, 10)
+        price = max(self.buy_price - randint(0, 10), 1)
         self.buying.append(price)
 
     def new_sell_offer(self):
@@ -117,8 +117,6 @@ for t in range(TIME):
         m.new_buy_offer()
 
 
-print(m.max_history)
-print(m.min_history)
 interval_graph(m)
-print(m.history)
+print()
 last_price_graph(m)
