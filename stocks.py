@@ -1,12 +1,15 @@
 from random import randint, random
 
 
-def gen_sell_price():
-    return randint(25, 50)
-
-
-def gen_buy_price():
-    return randint(4, 25)
+# Assumptions
+# NUMBER_OF_OFFERS sell orders always
+# NUMBER_OF_OFFERS buy orders always
+# First 10 buy orders are random between 4 and 25
+# First 10 sell orders are random between 25 and 50
+# If final exchange price last day was higher than the previous one, buy twice
+# If final exchange price last day was lower than the previous one, sell twice
+# Every time someone buys, a new selling offer is made, at a higher price than the current sell price
+# Every time someone sells, a new buying offer is made, at a lower price than the current buy price
 
 
 def offer_margin():
@@ -18,8 +21,8 @@ NUMBER_OF_OFFERS = 10
 
 
 class Market:
-    buying = [gen_buy_price() for _ in range(NUMBER_OF_OFFERS)]
-    selling = [gen_sell_price() for _ in range(NUMBER_OF_OFFERS)]
+    buying = [randint(4, 25) for _ in range(NUMBER_OF_OFFERS)]
+    selling = [randint(25, 50) for _ in range(NUMBER_OF_OFFERS)]
 
     max_history = [0 for _ in range(TIME)]
     min_history = [1000 for _ in range(TIME)]
@@ -99,9 +102,10 @@ def last_price_graph(market):
 
 m = Market()
 
+# print("History")
 for t in range(TIME):
     delta = m.delta
-    print("| buy price:", m.buy_price, "| sell price:", m.sell_price, "| delta:", delta)
+    # print("| buy price:", m.buy_price, "| sell price:", m.sell_price, "| delta:", delta)
     if random() < 0.5:
         m.buy(t)
         m.new_sell_offer()
