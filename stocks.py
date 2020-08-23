@@ -13,8 +13,8 @@ TIME = 100
 
 
 class Market:
-    buying = [gen_buy_price() for _ in range(5)]
-    selling = [gen_sell_price() for _ in range(5)]
+    buying = [gen_buy_price() for _ in range(10)]
+    selling = [gen_sell_price() for _ in range(10)]
 
     max_history = [0 for _ in range(TIME)]
     min_history = [100 for _ in range(TIME)]
