@@ -1,17 +1,6 @@
 from random import randint, random
 
 
-# Assumptions
-# NUMBER_OF_OFFERS sell orders always
-# NUMBER_OF_OFFERS buy orders always
-# First 10 buy orders are random between 4 and 25
-# First 10 sell orders are random between 25 and 50
-# If final exchange price last day was higher than the previous one, buy twice
-# If final exchange price last day was lower than the previous one, sell twice
-# Every time someone buys, a new selling offer is made, at a higher price than the current sell price
-# Every time someone sells, a new buying offer is made, at a lower price than the current buy price
-
-
 def offer_margin():
     return randint(0, 10)
 
@@ -85,10 +74,8 @@ def interval_graph(market):
 
 m = Market()
 
-# print("History")
 for t in range(TIME):
     delta = m.delta
-    # print("| buy price:", m.buy_price, "| sell price:", m.sell_price, "| delta:", delta)
     if random() < 0.5:
         m.buy(t)
     else:
