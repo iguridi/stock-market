@@ -44,11 +44,13 @@ class Market:
         price = self.buy_price
         self.selling.remove(price)
         self._exchange(price, time)
+        self._new_sell_offer()
 
     def sell(self, time):
         price = self.sell_price
         self.buying.remove(price)
         self._exchange(price, time)
+        self._new_buy_offer()
 
     def _exchange(self, price, time):
         if self.last_price is not None:
@@ -58,13 +60,11 @@ class Market:
         self.max_history[time] = max(price, self.max_history[time])
         self.history[time] = price
 
-    def new_buy_offer(self):
-        price = max(self.buy_price - offer_margin(), 1)
-        self.buying.append(price)
+    def _new_buy_offer(self):
+        self.buying.append(max(self.buy_price - offer_margin(), 1))
 
-    def new_sell_offer(self):
-        price = offer_margin() + self.sell_price
-        self.selling.append(price)
+    def _new_sell_offer(self):
+        self.selling.append(offer_margin() + self.sell_price)
 
 
 def interval_graph(market):
@@ -108,22 +108,16 @@ for t in range(TIME):
     # print("| buy price:", m.buy_price, "| sell price:", m.sell_price, "| delta:", delta)
     if random() < 0.5:
         m.buy(t)
-        m.new_sell_offer()
     else:
         m.sell(t)
-        m.new_buy_offer()
     if delta is None:
         continue
     if delta < 0:
         m.buy(t)
-        m.new_sell_offer()
         m.buy(t)
-        m.new_sell_offer()
     if delta > 0:
         m.sell(t)
-        m.new_buy_offer()
         m.sell(t)
-        m.new_buy_offer()
 
 
 interval_graph(m)
