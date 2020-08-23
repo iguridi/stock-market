@@ -13,10 +13,6 @@ Script to generate stock market like graphs. The trends are produced by trader b
 - Every time someone buys, a new selling offer is made, at a higher price than the new sell price
 - Every time someone sells, a new buying offer is made, at a lower price than the new buy price
 
-Made with python 3.7
-
-To run just do `python stocks.py`
-
 Example result:
 
 ![stock graph](stock-graph.png)
