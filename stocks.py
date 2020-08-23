@@ -27,8 +27,6 @@ class Market:
     max_history = [0 for _ in range(TIME)]
     min_history = [1000 for _ in range(TIME)]
 
-    history = [0 for _ in range(TIME)]
-
     last_price = None
     delta = None
 
@@ -58,7 +56,6 @@ class Market:
         self.last_price = price
         self.min_history[time] = min(price, self.min_history[time])
         self.max_history[time] = max(price, self.max_history[time])
-        self.history[time] = price
 
     def _new_buy_offer(self):
         self.buying.append(max(self.buy_price - offer_margin(), 1))
@@ -86,20 +83,6 @@ def interval_graph(market):
     print("  |_" + "_" * TIME + "__ time")
 
 
-def last_price_graph(market):
-    history = market.history
-    price = max(history)
-    grid = [[" " for _ in range(TIME)] for _ in range(price)]
-    for t in range(TIME):
-        p = history[t]
-        grid[-p][t] = "*"
-
-    print(f"\nprice({price})")
-    for string in ["".join(i) for i in grid]:
-        print("  |", string)
-    print("  |_" + "_" * TIME + "__ time")
-
-
 m = Market()
 
 # print("History")
@@ -121,5 +104,3 @@ for t in range(TIME):
 
 
 interval_graph(m)
-print()
-last_price_graph(m)
