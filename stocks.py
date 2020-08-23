@@ -16,7 +16,7 @@ def offer_margin():
     return randint(0, 10)
 
 
-TIME = 100
+TIME = 365
 NUMBER_OF_OFFERS = 10
 
 
@@ -77,10 +77,10 @@ def interval_graph(market):
         grid[-min_price][t] = "+"
         grid[-max_price][t] = "+"
 
-    print("\nprice")
+    print(f"\nprice({price})")
     for string in ["".join(i) for i in grid]:
         print("  |", string)
-    print("  |_" + "_" * TIME + "__ time")
+    print("  |_" + "_" * TIME + f"__ time({TIME})")
 
 
 m = Market()
