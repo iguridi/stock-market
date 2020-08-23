@@ -9,15 +9,20 @@ def gen_buy_price():
     return randint(4, 25)
 
 
+def offer_margin():
+    return randint(0, 10)
+
+
 TIME = 100
+NUMBER_OF_OFFERS = 10
 
 
 class Market:
-    buying = [gen_buy_price() for _ in range(10)]
-    selling = [gen_sell_price() for _ in range(10)]
+    buying = [gen_buy_price() for _ in range(NUMBER_OF_OFFERS)]
+    selling = [gen_sell_price() for _ in range(NUMBER_OF_OFFERS)]
 
     max_history = [0 for _ in range(TIME)]
-    min_history = [100 for _ in range(TIME)]
+    min_history = [1000 for _ in range(TIME)]
 
     history = [0 for _ in range(TIME)]
 
@@ -51,11 +56,11 @@ class Market:
         self.history[time] = price
 
     def new_buy_offer(self):
-        price = max(self.buy_price - randint(0, 10), 1)
+        price = max(self.buy_price - offer_margin(), 1)
         self.buying.append(price)
 
     def new_sell_offer(self):
-        price = randint(0, 10) + self.sell_price
+        price = offer_margin() + self.sell_price
         self.selling.append(price)
 
 
