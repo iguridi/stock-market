@@ -5,7 +5,7 @@ def offer_margin():
     return randint(0, 10)
 
 
-TIME = 365
+TIME = 100
 NUMBER_OF_OFFERS = 10
 
 

@@ -12,19 +12,29 @@ def offer_margin():
 
 
 def buy(time, buying, selling, history):
-    buy_price = min(selling)
-    selling = remove(selling, buy_price)
-    selling = add_sell_offer(selling, max(buying))
-    history = write_history(buy_price, time, history)
-    return buying, selling, history
+    return exchange(time, selling, buying, history, add_sell_offer, min, max)
 
 
 def sell(time, buying, selling, history):
-    sell_price = max(buying)
-    buying = remove(buying, sell_price)
-    buying = add_buy_offer(buying, min(selling))
-    history = write_history(sell_price, time, history)
-    return buying, selling, history
+    return exchange(time, buying, selling, history, add_buy_offer, max, min)
+
+
+def exchange(
+    time,
+    exchange_price_list,
+    offer_price_list,
+    history,
+    add_offer,
+    exchange_price_function,
+    offer_price_function,
+):
+    price = exchange_price_function(exchange_price_list)
+    exchange_price_list = remove(exchange_price_list, price)
+    exchange_price_list = add_offer(
+        exchange_price_list, offer_price_function(offer_price_list)
+    )
+    history = write_history(price, time, history)
+    return exchange_price_list, offer_price_list, history
 
 
 def remove(values, value):
@@ -99,14 +109,14 @@ def print_state(history, time):
 for t in range(TIME):
     delta = history.delta
     if random() < 0.5:
-        buying, selling, history = buy(t, buying, selling, history)
+        selling, buying, history = buy(t, buying, selling, history)
     else:
         buying, selling, history = sell(t, buying, selling, history)
     if delta is None:
         continue
     if delta < 0:
-        buying, selling, history = buy(t, buying, selling, history)
-        buying, selling, history = buy(t, buying, selling, history)
+        selling, buying, history = buy(t, buying, selling, history)
+        selling, buying, history = buy(t, buying, selling, history)
     if delta > 0:
         buying, selling, history = sell(t, buying, selling, history)
         buying, selling, history = sell(t, buying, selling, history)
