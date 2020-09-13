@@ -12,29 +12,25 @@ def offer_margin():
 
 
 def buy(time, buying, selling, history):
-    return exchange(time, selling, buying, history, add_sell_offer, min, max)
+    selling, buying, price = exchange(selling, buying, add_sell_offer, min, max)
+    return buying, selling, price
 
 
 def sell(time, buying, selling, history):
-    return exchange(time, buying, selling, history, add_buy_offer, max, min)
+    return exchange(buying, selling, add_buy_offer, max, min)
 
 
-def exchange(
-    time,
-    exchange_price_list,
-    offer_price_list,
-    history,
-    add_offer,
-    exchange_price_function,
-    offer_price_function,
-):
-    price = exchange_price_function(exchange_price_list)
-    exchange_price_list = remove(exchange_price_list, price)
-    exchange_price_list = add_offer(
-        exchange_price_list, offer_price_function(offer_price_list)
-    )
+def exchange(exchange_list, offer_list, add_offer, exchange_function, offer_function):
+    price = exchange_function(exchange_list)
+    exchange_list = remove(exchange_list, price)
+    exchange_list = add_offer(exchange_list, offer_function(offer_list))
+    return exchange_list, offer_list, price
+
+
+def make_action(time, buying, selling, history, action):
+    buying, selling, price = action(time, buying, selling, history)
     history = write_history(price, time, history)
-    return exchange_price_list, offer_price_list, history
+    return buying, selling, history
 
 
 def remove(values, value):
@@ -109,17 +105,17 @@ def print_state(history, time):
 for t in range(TIME):
     delta = history.delta
     if random() < 0.5:
-        selling, buying, history = buy(t, buying, selling, history)
+        buying, selling, history = make_action(t, buying, selling, history, buy)
     else:
-        buying, selling, history = sell(t, buying, selling, history)
+        buying, selling, history = make_action(t, buying, selling, history, sell)
     if delta is None:
         continue
     if delta < 0:
-        selling, buying, history = buy(t, buying, selling, history)
-        selling, buying, history = buy(t, buying, selling, history)
+        buying, selling, history = make_action(t, buying, selling, history, buy)
+        buying, selling, history = make_action(t, buying, selling, history, buy)
     if delta > 0:
-        buying, selling, history = sell(t, buying, selling, history)
-        buying, selling, history = sell(t, buying, selling, history)
+        buying, selling, history = make_action(t, buying, selling, history, sell)
+        buying, selling, history = make_action(t, buying, selling, history, sell)
     # print_state(history, t)
 
 interval_graph(history)
