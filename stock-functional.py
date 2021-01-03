@@ -102,20 +102,24 @@ def print_state(history, time):
     print(history.min_history[time], history.max_history[time], history.delta)
 
 
-for t in range(TIME):
+def a_moment(buying, selling, history, t):
     delta = history.delta
     if random() < 0.5:
         buying, selling, history = make_action(t, buying, selling, history, buy)
     else:
         buying, selling, history = make_action(t, buying, selling, history, sell)
     if delta is None:
-        continue
+        return buying, selling, history
     if delta < 0:
         buying, selling, history = make_action(t, buying, selling, history, buy)
         buying, selling, history = make_action(t, buying, selling, history, buy)
     if delta > 0:
         buying, selling, history = make_action(t, buying, selling, history, sell)
         buying, selling, history = make_action(t, buying, selling, history, sell)
-    # print_state(history, t)
+    return buying, selling, history
+
+
+for t in range(TIME):
+    buying, selling, history = a_moment(buying, selling, history, t)
 
 interval_graph(history)
