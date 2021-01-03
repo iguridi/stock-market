@@ -11,24 +11,25 @@ def offer_margin():
     return randint(0, 10)
 
 
-def buy(time, buying, selling, history):
-    selling, buying, price = exchange(selling, buying, add_sell_offer, min, max)
+def buy(time, buying, selling):
+    selling, price = exchange(selling, buying, add_sell_offer, min, max)
     return buying, selling, price
 
 
-def sell(time, buying, selling, history):
-    return exchange(buying, selling, add_buy_offer, max, min)
+def sell(time, buying, selling):
+    buying, price = exchange(buying, selling, add_buy_offer, max, min)
+    return buying, selling, price
 
 
 def exchange(exchange_list, offer_list, add_offer, exchange_function, offer_function):
     price = exchange_function(exchange_list)
     exchange_list = remove(exchange_list, price)
     exchange_list = add_offer(exchange_list, offer_function(offer_list))
-    return exchange_list, offer_list, price
+    return exchange_list, price
 
 
 def make_action(time, buying, selling, history, action):
-    buying, selling, price = action(time, buying, selling, history)
+    buying, selling, price = action(time, buying, selling)
     history = write_history(price, time, history)
     return buying, selling, history
 
