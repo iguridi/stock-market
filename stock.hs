@@ -11,13 +11,20 @@ maxNumber a b =
     if a >= b then a
     else b
 
+
 addToList :: Int -> [Int] -> [Int]
 addToList a [] = [a]
 addToList a (x:xs) = x : addToList a xs
 
 
 addBuyOffer :: [Int] -> Int -> [Int]
-addBuyOffer buying price = addToList (maxNumber (price - offerMargin) 1) buying
+addBuyOffer buying price = addToList x buying where
+    x = maxNumber (price - offerMargin) 1
+
+addSellOffer :: [Int] -> Int -> [Int]
+addSellOffer selling price = addToList x selling where
+    x = price + offerMargin
+
 
 main = do
     let res = offerMargin
@@ -30,4 +37,7 @@ main = do
     putStrLn $ "max number = " ++ show res
 
     let res = addBuyOffer [1..5] 6
-    putStrLn $ "max number = " ++ show res
+    putStrLn $ "buy offer = " ++ show res
+
+    let res = addSellOffer [1..5] 6
+    putStrLn $ "sell offer = " ++ show res
