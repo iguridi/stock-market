@@ -18,7 +18,7 @@ fn remove_from_vector(vec: &Vec<i32>, value: i32) -> Vec<i32> {
     [&vec[..pos], &vec[pos + 1..]].concat()
 }
 
-const TIME: i32 = 100;
+const TIME: i32 = 75;
 const NUMBER_OF_OFFERS: i32 = 10;
 
 #[derive(Debug)]
@@ -37,7 +37,7 @@ impl Market {
     }
 
     fn sell_price(&self) -> i32 {
-        self.selling.iter().max().unwrap().to_owned()
+        self.buying.iter().max().unwrap().to_owned()
     }
 
     fn buy(self: &mut Self, time: usize) {
@@ -48,10 +48,10 @@ impl Market {
     }
 
     fn sell(self: &mut Self, time: usize) {
-        let price = self.buy_price();
-        self.buying = remove_from_vector(&self.selling, price);
+        let price = self.sell_price();
+        self.buying = remove_from_vector(&self.buying, price);
         self._exchange(time, price);
-        self._new_sell_offer();
+        self._new_buy_offer();
     }
 
     fn _exchange(self: &mut Self, time: usize, price: i32) {
@@ -64,41 +64,42 @@ impl Market {
     }
 
     fn _new_buy_offer(self: &mut Self) {
-        self.selling
+        self.buying
             .push(cmp::max(self.buy_price() - offer_margin(), 1));
     }
 
     fn _new_sell_offer(self: &mut Self) {
-        self.selling.push(self.sell_price() - offer_margin());
+        self.selling.push(self.sell_price() + offer_margin());
     }
 }
 
-fn interval_graph(market: Market) {
-    let max_history = market.max_history;
-    let min_history = market.min_history;
+fn interval_graph(market: &Market) {
+    let max_history = &market.max_history;
+    let min_history = &market.min_history;
     let price = cmp::max(
         max_history.iter().max().unwrap().to_owned(),
         min_history.iter().max().unwrap().to_owned(),
     );
-    let mut grid: Vec<Vec<&str>> = (0..price)
-        .map(|_| (0..TIME).map(|_| " ").collect())
+    let mut grid: Vec<Vec<&str>> = (0..price + 1)
+        .map(|_| (0..TIME).map(|_| "  ").collect())
         .collect();
     let grid_length = &grid.len();
     for turn in 0..TIME as usize {
         let min_price = min_history[turn] as usize;
         let max_price = max_history[turn] as usize;
         for price in min_price..max_price {
-            grid[grid_length - price][turn] = "|";
+            grid[grid_length - price][turn] = " |";
         }
-        grid[grid_length - min_price][turn] = "+";
-        grid[grid_length - max_price][turn] = "+";
-        print!("\nprice({})\n", price);
-        for row in &grid {
-            let string_repr = row.join("");
-            print!(" | {}\n", string_repr);
-        }
-        print!(" |_{}__ time({}", str::repeat("_", TIME as usize), TIME);
+        grid[grid_length - min_price + 1][turn] = " +";
+        grid[grid_length - min_price][turn] = " |";
+        grid[grid_length - max_price][turn] = " +";
     }
+    print!("\nprice({})\n", price);
+    for row in &grid {
+        let string_repr = row.join("");
+        print!(" | {}\n", string_repr);
+    }
+    print!(" |_{}__ time({}", str::repeat("_", 2 * TIME as usize), TIME);
 }
 
 fn main() {
@@ -110,8 +111,6 @@ fn main() {
         last_price: None,
         delta: None,
     };
-
-    print!("AAAAA\n {:?}\n", market);
 
     for turn in 0..TIME as usize {
         let delta = market.delta;
@@ -132,5 +131,5 @@ fn main() {
         }
     }
 
-    interval_graph(market);
+    interval_graph(&market);
 }
