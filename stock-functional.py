@@ -11,12 +11,12 @@ def offer_margin():
     return randint(0, 10)
 
 
-def buy(time, buying, selling):
+def buy(buying, selling):
     selling, price = exchange(selling, buying, add_sell_offer, min, max)
     return buying, selling, price
 
 
-def sell(time, buying, selling):
+def sell(buying, selling):
     buying, price = exchange(buying, selling, add_buy_offer, max, min)
     return buying, selling, price
 
@@ -29,7 +29,7 @@ def exchange(exchange_list, offer_list, add_offer, exchange_function, offer_func
 
 
 def make_action(time, buying, selling, history, action):
-    buying, selling, price = action(time, buying, selling)
+    buying, selling, price = action(buying, selling)
     history = write_history(price, time, history)
     return buying, selling, history
 
@@ -48,9 +48,7 @@ def add_sell_offer(selling, price):
 
 
 def write_history(price, time, h):
-    delta = None
-    if h.last_price is not None:
-        delta = price - h.last_price
+    delta = price - h.last_price
     return History(
         min_history=(
             h.min_history[:time]
@@ -67,17 +65,17 @@ def write_history(price, time, h):
     )
 
 
-buying = tuple(randint(4, 25) for _ in range(NUMBER_OF_OFFERS))
+buying = tuple(randint(1, 25) for _ in range(NUMBER_OF_OFFERS))
 selling = tuple(randint(25, 50) for _ in range(NUMBER_OF_OFFERS))
+
+last_price = min(selling)
 
 history = History(
     max_history=tuple(0 for _ in range(TIME)),
     min_history=tuple(1000 for _ in range(TIME)),
-    last_price=None,
-    delta=None,
+    last_price=last_price,
+    delta=0,
 )
-
-last_price = None
 
 
 def interval_graph(history):
@@ -109,8 +107,6 @@ def a_moment(buying, selling, history, t):
         buying, selling, history = make_action(t, buying, selling, history, buy)
     else:
         buying, selling, history = make_action(t, buying, selling, history, sell)
-    if delta is None:
-        return buying, selling, history
     if delta < 0:
         buying, selling, history = make_action(t, buying, selling, history, buy)
         buying, selling, history = make_action(t, buying, selling, history, buy)
