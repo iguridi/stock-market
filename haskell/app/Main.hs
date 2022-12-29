@@ -17,6 +17,7 @@ chart = do
   let chartHeight = 5
 
   let generator = mkStdGen 42
+  -- let randomNumbers = take 10 (randomRs (1, chartHeight) generator)
   let randomNumbers = [1, 2, 3, 4, 4, 3, 2, 1, 5]
 
   let columns = genColumns chartHeight randomNumbers
