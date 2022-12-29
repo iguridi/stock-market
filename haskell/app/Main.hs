@@ -7,9 +7,9 @@ createColumn columnPosition chartHeight =
   reverse [if y == columnPosition then '*' else ' ' | y <- [1 .. chartHeight]]
 
 
-createXaxis :: Int -> String
-createXaxis chartWidth =
-  replicate chartWidth '-'
+-- createXaxis :: Int -> String
+-- createXaxis chartWidth =
+--   replicate chartWidth '-'
 
 genColumns :: Int -> [Int] -> [[Char]]
 genColumns chartHeight values = do
@@ -27,7 +27,7 @@ chart = do
   let transposed = transpose columns
   let withYAxis = map ('|' :) transposed
 
-  let xAxis = " " ++ createXaxis chartWidth
+  let xAxis = replicate chartWidth '-'
   let chart = withYAxis ++ [xAxis]
   putStrLn "\n\n"
   putStrLn (unlines chart)
