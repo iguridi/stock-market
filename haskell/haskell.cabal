@@ -43,6 +43,7 @@ executable haskell
     -- other-extensions:
     build-depends:
         base ^>=4.16.4.0,
+        random,
         haskell
 
     hs-source-dirs:   app

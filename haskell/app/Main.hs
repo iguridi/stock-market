@@ -1,3 +1,7 @@
+import Control.Monad (forM_)
+import System.Random ( mkStdGen, Random(randomRs) )
+
+
 createLine :: Int -> Int -> String
 createLine position length =
   let spaces = replicate length ' '
@@ -8,21 +12,20 @@ createXaxis :: Int -> String
 createXaxis length =
   replicate length '-'
 
-loop :: Int -> Int -> Int -> IO [Char]
-loop length height position = do
-  let height' = height - 1
-  if height' > 0
-    then do
-      let line = "\n|" ++ createLine position length
-      other_lines <- loop length height' position
-      return (line ++ other_lines)
-    else return ""
+genLines :: Int -> [Int] -> [Char]
+genLines length values = do
+  let joinLines x acc = x ++ "\n|" ++ createLine acc length
+  foldl joinLines "" values
+
 
 chart :: IO ()
 chart = do
-  let position = 10
+  -- let position = 10
   let length = 20
-  lines <- loop length 10 position
+  -- let array = [1, 2, 3, 4, 5]
+  let generator = mkStdGen 42
+  let randomNumbers = take 10 (randomRs (1, 5) generator)
+  let lines = genLines length randomNumbers
   let xAxis = " " ++ createXaxis length
   putStrLn "\n\n"
   putStrLn lines
