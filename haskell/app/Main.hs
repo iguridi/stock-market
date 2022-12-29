@@ -8,9 +8,17 @@ createXaxis :: Int -> String
 createXaxis length =
   replicate length '-'
 
+
+chart :: IO ()
+chart = do
+  let position = 10
+  let length = 20
+  let line = "|" ++ createLine position length
+  let xAxis = " " ++ createXaxis length
+  putStrLn line
+  putStrLn xAxis
+
+
 main :: IO ()
 main = do
-  let line = "|" ++ createLine 10 20
-  let xAxis = " " ++ createXaxis 10
-  putStrLn  line
-  putStrLn xAxis
+  chart
