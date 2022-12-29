@@ -18,7 +18,7 @@ fn remove_from_vector(vec: &Vec<i32>, value: i32) -> Vec<i32> {
     [&vec[..pos], &vec[pos + 1..]].concat()
 }
 
-const TIME: i32 = 75;
+const TIME: i32 = 100;
 const NUMBER_OF_ORDERS: i32 = 10;
 
 trait Offering {
@@ -87,8 +87,8 @@ struct Market {
     asking: Asking,
     max_history: Vec<i32>,
     min_history: Vec<i32>,
-    last_price: Option<i32>,
-    delta: Option<i32>,
+    last_price: i32,
+    delta: i32,
 }
 
 impl Market {
@@ -105,10 +105,8 @@ impl Market {
     }
 
     fn record_exchange(self: &mut Self, time: usize, price: i32) {
-        if let Some(i) = self.last_price {
-            self.delta = Some(price - i)
-        };
-        self.last_price = Some(price);
+        self.delta = price - self.last_price;
+        self.last_price = price;
         self.min_history[time] = cmp::min(price, self.min_history[time]);
         self.max_history[time] = cmp::max(price, self.max_history[time]);
     }
@@ -151,13 +149,15 @@ fn main() {
         orders: (0..NUMBER_OF_ORDERS).map(|_x| random(25, 50)).collect(),
     };
 
+    let first_price = biding.best_price();
+
     let mut market = Market {
         asking,
         biding,
         max_history: (0..TIME).map(|_| 0).collect(),
         min_history: (0..TIME).map(|_| 1000).collect(),
-        last_price: None,
-        delta: None,
+        last_price: first_price,
+        delta: 0,
     };
 
     for turn in 0..TIME as usize {
@@ -167,15 +167,13 @@ fn main() {
         } else {
             market.sell_market_order(turn);
         }
-        if let Some(value) = delta {
-            if value < 0 {
-                market.buy_market_order(turn);
-                market.buy_market_order(turn);
-            }
-            if value > 0 {
-                market.sell_market_order(turn);
-                market.sell_market_order(turn);
-            }
+        if delta < 0 {
+            market.buy_market_order(turn);
+            market.buy_market_order(turn);
+        }
+        if delta > 0 {
+            market.sell_market_order(turn);
+            market.sell_market_order(turn);
         }
     }
 
