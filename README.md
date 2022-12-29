@@ -16,3 +16,18 @@ Script to generate stock market like graphs. The trends are produced by trader b
 Example result:
 
 ![stock graph](stock-graph.png)
+
+
+## TODO
+
+[] haskell WIP
+[] prolog
+[] lisp
+[] elixir
+[] clojure
+[] nim
+[] c++
+[] nix
+[X] rust
+[X] Javascript
+[X] Python
