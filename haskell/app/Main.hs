@@ -1,6 +1,6 @@
 import Control.Monad (when)
 import Data.List (transpose)
-import System.Random (Random (randomRs), mkStdGen)
+import System.Random (Random (randomRs), mkStdGen, randomRIO)
 
 numberOfOffers :: Int
 numberOfOffers = 10
@@ -24,17 +24,30 @@ genColumns chartHeight values = do
   let joinColumns x acc = x ++ [createColumn chartHeight acc]
   foldl joinColumns [] values
 
+-- makeOffers :: (Int, Int) -> [Int]
+-- makeOffers range = do
+--   let generator = mkStdGen 42
+--   take numberOfOffers (randomRs range generator)
+
+buy :: ([Int], [Int], [(Int, Int)], Int, Int) -> Int -> ([Int], [Int], [(Int, Int)], Int, Int)
+buy (biding, asking, history, lastPrice, delta) time =
+  (biding, asking, history, lastPrice, delta)
+
+sell :: ([Int], [Int], [(Int, Int)], Int, Int) -> Int -> ([Int], [Int], [(Int, Int)], Int, Int)
+sell (biding, asking, history, lastPrice, delta) time =
+  (biding, asking, history, lastPrice, delta)
+
 oneTurn :: ([Int], [Int], [(Int, Int)], Int, Int) -> Int -> ([Int], [Int], [(Int, Int)], Int, Int)
-oneTurn (biding, asking, history, lastPrice, delta) time = (biding, asking, history, lastPrice, delta)
+oneTurn (biding, asking, history, lastPrice, delta) time = do
+  randoum <- randomRIO (0.0, 1.0)
+  let (biding', asking', history', lastPrice', delta') = if randoum > 0.5 then sell (biding, asking, history, lastPrice, delta) time else buy (biding, asking, history, lastPrice, delta) time
+  (biding', asking', history', lastPrice', delta')
 
-makeOffers :: (Int, Int) -> [Int]
-makeOffers range = do
-  let generator = mkStdGen 42
-  take numberOfOffers (randomRs range generator)
-
+simulation :: IO ()
 simulation = do
-  let biding = makeOffers (1, 25) --take numberOfOffers (randomRs (1, 25) generator)
-  let asking = makeOffers (25, 50) --take numberOfOffers (randomRs (25, 50) generator)
+  let generator = mkStdGen 42
+  let biding = take numberOfOffers (randomRs (1, 25) generator)
+  let asking = take numberOfOffers (randomRs (25, 50) generator)
   let history = replicate totalTurns (1, 50)
   let lastPrice = minimum asking
   let delta = 0
