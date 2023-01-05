@@ -12,6 +12,7 @@ Script to generate stock market like graphs. The trends are produced by trader b
 - If final exchange price last day was lower than the previous one, sell twice
 - Every time someone buys, a new selling offer is made, at a higher price than the new sell price
 - Every time someone sells, a new buying offer is made, at a lower price than the new buy price
+- Bid-ask spread is random between 1 and 10
 
 Example result:
 

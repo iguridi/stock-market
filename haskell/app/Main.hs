@@ -48,19 +48,19 @@ replaceNth n f (x : xs)
 updateHistory :: Int -> (Int, Int) -> (Int, Int)
 updateHistory price (minHist, maxHist) = (min price minHist, max price maxHist)
 
-bid :: ([Int], [Int], [(Int, Int)], Int, Int) -> Int -> Int -> ([Int], [Int], [(Int, Int)], Int, Int)
-bid (biding, asking, history, lastPrice, delta) time margin = do
-    let price = minimum asking
-    let asking' = replaceX asking price (margin + maximum biding)
-    let history' = replaceNth (time - 1) (updateHistory price) history
-    (biding, asking', history', price, price - lastPrice)
+sellMarketOrder :: ([Int], [Int], [(Int, Int)], Int, Int) -> Int -> Int -> ([Int], [Int], [(Int, Int)], Int, Int)
+sellMarketOrder (biding, asking, history, lastPrice, delta) time spread = do
+    let bidPrice = minimum asking
+    let asking' = replaceX asking bidPrice (spread + maximum biding)
+    let history' = replaceNth (time - 1) (updateHistory bidPrice) history
+    (biding, asking', history', bidPrice, bidPrice - lastPrice)
 
-ask :: ([Int], [Int], [(Int, Int)], Int, Int) -> Int -> Int -> ([Int], [Int], [(Int, Int)], Int, Int)
-ask (biding, asking, history, lastPrice, delta) time margin = do
-    let price = minimum biding
-    let biding' = replaceX biding price (max (minimum asking - margin) 1)
-    let history' = replaceNth (time - 1) (updateHistory price) history
-    (biding', asking, history', price, price - lastPrice)
+buyMarketOrder :: ([Int], [Int], [(Int, Int)], Int, Int) -> Int -> Int -> ([Int], [Int], [(Int, Int)], Int, Int)
+buyMarketOrder (biding, asking, history, lastPrice, delta) time spread = do
+    let askPrice = minimum biding
+    let biding' = replaceX biding askPrice (max (minimum asking - spread) 1)
+    let history' = replaceNth (time - 1) (updateHistory askPrice) history
+    (biding', asking, history', askPrice, askPrice - lastPrice)
 
 -- TODO: this is too much, use a monad?
 oneTurn :: ([Int], [Int], [(Int, Int)], Int, Int) -> (Int, Bool, Int) -> ([Int], [Int], [(Int, Int)], Int, Int)
@@ -69,13 +69,13 @@ oneTurn info turn =
     ("DEBUG: oneTurn  \n" ++ show info ++ "\n" ++ show turn ++ "\n")
     ( do
         let (_, _, _, _, delta) = info
-        let (time, random, margin) = turn
-        -- TODO: margin is the same for all moves on each turn, wth
+        let (time, random, spread) = turn
+        -- TODO: spread is the same for all moves on each turn, wth
         -- TODO: I'm guessing here is where it's not working
-        let tendency = if delta < 0 then ask else bid
-        let randomDecision = if random then ask else bid
+        let tendency = if delta < 0 then buyMarketOrder else sellMarketOrder
+        let randomDecision = if random then buyMarketOrder else sellMarketOrder
         let desicions = [randomDecision]--, tendency, tendency]
-        foldl (\x y -> y x time margin) info desicions
+        foldl (\x y -> y x time spread) info desicions
     )
 
 randomSequence :: Int -> Int -> Int -> IO [Int]
@@ -99,15 +99,15 @@ simulation :: IO ()
 simulation = do
   biding <- randomSequence numberOfOffers 1 25
   asking <- randomSequence numberOfOffers 25 50
-  randomMargins <- randomSequence totalTurns 25 50
+  randomSpreads <- randomSequence totalTurns 1 5
 
   let info = (biding, asking, replicate totalTurns (50, 1), minimum asking, 0)
   let randomnActions = take totalTurns $ randoms (mkStdGen 11) :: [Bool]
   -- uncomment this to make randomness constant
   -- let biding = take numberOfOffers (randomRs (1, 25) (mkStdGen 42))
   -- let asking = take numberOfOffers (randomRs (25, 50) (mkStdGen 41))
-  -- let randomnMargins = take totalTurns (randomRs (0, 10) (mkStdGen 41))
-  let turns = zip3 [1 .. totalTurns] randomnActions randomMargins
+  -- let randomnspreads = take totalTurns (randomRs (0, 10) (mkStdGen 41))
+  let turns = zip3 [1 .. totalTurns] randomnActions randomSpreads
   let (biding', asking', history', lastPrice', delta') = foldl oneTurn info turns
   chart history'
 
