@@ -18,8 +18,7 @@ toChar x (from, to) = case x of
     | otherwise -> ' '
 
 createColumn :: Int -> (Int, Int) -> [Char]
-createColumn chartHeight range =
-  reverse [toChar y range | y <- [1 .. chartHeight]]
+createColumn chartHeight range = reverse [toChar y range | y <- [1 .. chartHeight]]
 
 genColumns :: Int -> [(Int, Int)] -> [[Char]]
 genColumns chartHeight values = do
@@ -50,17 +49,17 @@ updateHistory price (minHist, maxHist) = (min price minHist, max price maxHist)
 
 sellMarketOrder :: ([Int], [Int], [(Int, Int)], Int, Int) -> Int -> Int -> ([Int], [Int], [(Int, Int)], Int, Int)
 sellMarketOrder (sellOrders, buyOrders, history, lastPrice, delta) time spread = do
-    let bidPrice = maximum buyOrders
-    let buyOrders' = replaceX buyOrders bidPrice (minimum sellOrders + spread)
-    let history' = replaceNth (time - 1) (updateHistory bidPrice) history
-    (sellOrders, buyOrders', history', bidPrice, bidPrice - lastPrice)
+  let bidPrice = maximum buyOrders
+  let buyOrders' = replaceX buyOrders bidPrice (minimum sellOrders + spread)
+  let history' = replaceNth (time - 1) (updateHistory bidPrice) history
+  (sellOrders, buyOrders', history', bidPrice, bidPrice - lastPrice)
 
 buyMarketOrder :: ([Int], [Int], [(Int, Int)], Int, Int) -> Int -> Int -> ([Int], [Int], [(Int, Int)], Int, Int)
 buyMarketOrder (sellOrders, buyOrders, history, lastPrice, delta) time spread = do
-    let askPrice = minimum sellOrders
-    let sellOrders' = replaceX sellOrders askPrice (max (maximum buyOrders - spread) 1)
-    let history' = replaceNth (time - 1) (updateHistory askPrice) history
-    (sellOrders', buyOrders, history', askPrice, askPrice - lastPrice)
+  let askPrice = minimum sellOrders
+  let sellOrders' = replaceX sellOrders askPrice (max (maximum buyOrders - spread) 1)
+  let history' = replaceNth (time - 1) (updateHistory askPrice) history
+  (sellOrders', buyOrders, history', askPrice, askPrice - lastPrice)
 
 -- TODO: this is too much, use a monad?
 oneTurn :: ([Int], [Int], [(Int, Int)], Int, Int) -> (Int, Bool, Int) -> ([Int], [Int], [(Int, Int)], Int, Int)
@@ -82,15 +81,9 @@ randomSequence total from to = replicateM total $ randomRIO (from, to :: Int)
 
 chart :: [(Int, Int)] -> IO ()
 chart history = do
-  let chartHeight = maximum (map maximum history)
-  let chartWidth = totalTurns
-
-  let columns = genColumns chartHeight history
-  let transposed = transpose columns
-  let withYAxis = map ('|' :) transposed
-
-  let xAxis = replicate chartWidth '-'
-  let chart = withYAxis ++ [xAxis]
+  let columns = genColumns (maximum (map maximum history)) history
+  let withYAxis = map ('|' :) (transpose columns)
+  let chart = withYAxis ++ [replicate totalTurns '-']
   putStrLn "\n\n"
   putStrLn (unlines chart)
 
@@ -99,11 +92,11 @@ simulation = do
   buyOrders <- randomSequence numberOfOffers 1 25
   sellOrders <- randomSequence numberOfOffers 25 50
   randomSpreads <- randomSequence totalTurns 1 10
-
-  let info = (sellOrders, buyOrders, replicate totalTurns (50, 1), minimum buyOrders, 0)
+  let history = replicate totalTurns (50, 1)
+  let info = (sellOrders, buyOrders, history, minimum buyOrders, 0)
   let randomnActions = take totalTurns $ randoms (mkStdGen 11) :: [Bool]
   let turns = zip3 [1 .. totalTurns] randomnActions randomSpreads
-  let (sellOrders', buyOrders', history', lastPrice', delta') = foldl oneTurn info turns
+  let (_, _, history', _, _) = foldl oneTurn info turns
   chart history'
 
 main :: IO ()
