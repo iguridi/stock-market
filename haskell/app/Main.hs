@@ -101,5 +101,4 @@ simulation = do
   chart history'
 
 main :: IO ()
-main = do
-  simulation
+main = do simulation
