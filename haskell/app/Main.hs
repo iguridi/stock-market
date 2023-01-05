@@ -1,6 +1,6 @@
-import Control.Monad (when)
+import Control.Monad (when, join)
 import Data.List (transpose)
-import System.Random (Random (randomRs), mkStdGen, randomRIO)
+import System.Random --(Random (randomRs), mkStdGen, randomRIO)
 
 numberOfOffers :: Int
 numberOfOffers = 10
@@ -37,10 +37,13 @@ sell :: ([Int], [Int], [(Int, Int)], Int, Int) -> Int -> ([Int], [Int], [(Int, I
 sell (biding, asking, history, lastPrice, delta) time =
   (biding, asking, history, lastPrice, delta)
 
-oneTurn :: ([Int], [Int], [(Int, Int)], Int, Int) -> Int -> ([Int], [Int], [(Int, Int)], Int, Int)
-oneTurn (biding, asking, history, lastPrice, delta) time = do
-  randoum <- randomRIO (0.0, 1.0)
-  let (biding', asking', history', lastPrice', delta') = if randoum > 0.5 then sell (biding, asking, history, lastPrice, delta) time else buy (biding, asking, history, lastPrice, delta) time
+
+oneTurn :: ([Int], [Int], [(Int, Int)], Int, Int) -> (Int, Bool) -> ([Int], [Int], [(Int, Int)], Int, Int)
+oneTurn (biding, asking, history, lastPrice, delta) turn = do
+  -- result <- randomIO :: IO [Bool]
+  let time = fst turn
+  let direction = snd turn
+  let (biding', asking', history', lastPrice', delta') = if direction then sell (biding, asking, history, lastPrice, delta) time else buy (biding, asking, history, lastPrice, delta) time
   (biding', asking', history', lastPrice', delta')
 
 simulation :: IO ()
@@ -53,7 +56,8 @@ simulation = do
   let delta = 0
 
   -- turns
-  let (biding', asking', history', lastPrice', delta') = foldl oneTurn (biding, asking, history, lastPrice, delta) [1 .. totalTurns]
+  let randomness = take 5 $ randoms (mkStdGen 11) :: [Bool]
+  let (biding', asking', history', lastPrice', delta') = foldl oneTurn (biding, asking, history, lastPrice, delta) (zip [1 .. totalTurns] randomness)
   -- graph
   chart history'
 
