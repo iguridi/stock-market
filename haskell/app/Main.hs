@@ -49,18 +49,18 @@ updateHistory :: Int -> (Int, Int) -> (Int, Int)
 updateHistory price (minHist, maxHist) = (min price minHist, max price maxHist)
 
 sellMarketOrder :: ([Int], [Int], [(Int, Int)], Int, Int) -> Int -> Int -> ([Int], [Int], [(Int, Int)], Int, Int)
-sellMarketOrder (biding, asking, history, lastPrice, delta) time spread = do
-    let bidPrice = minimum asking
-    let asking' = replaceX asking bidPrice (spread + maximum biding)
+sellMarketOrder (sellOrders, buyOrders, history, lastPrice, delta) time spread = do
+    let bidPrice = maximum buyOrders
+    let buyOrders' = replaceX buyOrders bidPrice (minimum sellOrders + spread)
     let history' = replaceNth (time - 1) (updateHistory bidPrice) history
-    (biding, asking', history', bidPrice, bidPrice - lastPrice)
+    (sellOrders, buyOrders', history', bidPrice, bidPrice - lastPrice)
 
 buyMarketOrder :: ([Int], [Int], [(Int, Int)], Int, Int) -> Int -> Int -> ([Int], [Int], [(Int, Int)], Int, Int)
-buyMarketOrder (biding, asking, history, lastPrice, delta) time spread = do
-    let askPrice = minimum biding
-    let biding' = replaceX biding askPrice (max (minimum asking - spread) 1)
+buyMarketOrder (sellOrders, buyOrders, history, lastPrice, delta) time spread = do
+    let askPrice = minimum sellOrders
+    let sellOrders' = replaceX sellOrders askPrice (max (maximum buyOrders - spread) 1)
     let history' = replaceNth (time - 1) (updateHistory askPrice) history
-    (biding', asking, history', askPrice, askPrice - lastPrice)
+    (sellOrders', buyOrders, history', askPrice, askPrice - lastPrice)
 
 -- TODO: this is too much, use a monad?
 oneTurn :: ([Int], [Int], [(Int, Int)], Int, Int) -> (Int, Bool, Int) -> ([Int], [Int], [(Int, Int)], Int, Int)
@@ -73,9 +73,9 @@ oneTurn info turn =
         -- TODO: spread is the same for all moves on each turn, wth
         -- TODO: I'm guessing here is where it's not working
         let tendency = if delta < 0 then buyMarketOrder else sellMarketOrder
-        let randomDecision = if random then buyMarketOrder else sellMarketOrder
-        let desicions = [randomDecision, tendency, tendency]
-        foldl (\x y -> y x time spread) info desicions
+        let randomDecision = if random then sellMarketOrder else buyMarketOrder
+        let decisions = [randomDecision, tendency, tendency]
+        foldl (\x y -> y x time spread) info decisions
     )
 
 randomSequence :: Int -> Int -> Int -> IO [Int]
@@ -97,18 +97,14 @@ chart history = do
 
 simulation :: IO ()
 simulation = do
-  biding <- randomSequence numberOfOffers 1 25
-  asking <- randomSequence numberOfOffers 25 50
-  randomSpreads <- randomSequence totalTurns 1 5
+  buyOrders <- randomSequence numberOfOffers 1 25
+  sellOrders <- randomSequence numberOfOffers 25 50
+  randomSpreads <- randomSequence totalTurns 1 10
 
-  let info = (biding, asking, replicate totalTurns (50, 1), minimum asking, 0)
+  let info = (sellOrders, buyOrders, replicate totalTurns (50, 1), minimum buyOrders, 0)
   let randomnActions = take totalTurns $ randoms (mkStdGen 11) :: [Bool]
-  -- uncomment this to make randomness constant
-  -- let biding = take numberOfOffers (randomRs (1, 25) (mkStdGen 42))
-  -- let asking = take numberOfOffers (randomRs (25, 50) (mkStdGen 41))
-  -- let randomnspreads = take totalTurns (randomRs (0, 10) (mkStdGen 41))
   let turns = zip3 [1 .. totalTurns] randomnActions randomSpreads
-  let (biding', asking', history', lastPrice', delta') = foldl oneTurn info turns
+  let (sellOrders', buyOrders', history', lastPrice', delta') = foldl oneTurn info turns
   chart history'
 
 main :: IO ()
