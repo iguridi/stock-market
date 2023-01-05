@@ -69,17 +69,15 @@ oneTurn info turn = do
 
 simulation :: IO ()
 simulation = do
-  let generator = mkStdGen 42
-  let biding = take numberOfOffers (randomRs (1, 25) generator)
-  let asking = take numberOfOffers (randomRs (25, 50) generator)
-  let history = replicate totalTurns (1, 50)
-  let lastPrice = minimum asking
-  let delta = 0
+  let biding = take numberOfOffers (randomRs (1, 25) (mkStdGen 42))
+  let asking = take numberOfOffers (randomRs (25, 50) (mkStdGen 41))
+  let info = (biding, asking, replicate totalTurns (1, 50), minimum asking, 0)
 
   -- turns
   let randomnActions = take totalTurns $ randoms (mkStdGen 11) :: [Bool]
   let randomnMargins = take totalTurns $ randoms (mkStdGen 12) :: [Int]
-  let (biding', asking', history', lastPrice', delta') = foldl oneTurn (biding, asking, history, lastPrice, delta) (zip3 [1 .. totalTurns] randomnActions randomnMargins)
+  let turns = zip3 [1 .. totalTurns] randomnActions randomnMargins
+  let (biding', asking', history', lastPrice', delta') = foldl oneTurn info turns
   -- graph
   chart history'
 
