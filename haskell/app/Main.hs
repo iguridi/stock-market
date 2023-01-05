@@ -11,10 +11,10 @@ totalTurns :: Int
 totalTurns = 100
 
 toChar :: Int -> (Int, Int) -> Char
-toChar x range = case x of
+toChar x (from, to) = case x of
   _
-    | x > fst range && x < snd range -> '|'
-    | x == fst range || x == snd range -> '+'
+    | x > from && x < to -> '|'
+    | x == from || x == to -> '+'
     | otherwise -> ' '
 
 createColumn :: Int -> (Int, Int) -> [Char]
