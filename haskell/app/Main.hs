@@ -4,11 +4,11 @@ import System.Random --(Random (randomRs), mkStdGen, randomRIO)
 import Debug.Trace
 
 
--- totalTurns :: Int
--- totalTurns = 10
+numberOfOffers :: Int
+numberOfOffers = 10
 
 totalTurns :: Int
-totalTurns = 50
+totalTurns = 100
 
 toChar :: Int -> (Int, Int) -> Char
 toChar x range = case x of
@@ -68,6 +68,11 @@ ask (biding, asking, history, lastPrice, delta) time margin =
   (biding', asking, history', price, price - lastPrice)
   -- )
 
+-- tendency :: Int -> Maybe (([Int], [Int], [(Int, Int)], Int, Int) -> Int -> Int -> ([Int], [Int], [(Int, Int)], Int, Int))
+-- tendency delta
+--   | delta > 0 = ask
+--   | delta < 0 = bid
+--   | otherwise = Nothing
 
 oneTurn :: ([Int], [Int], [(Int, Int)], Int, Int) -> (Int, Bool, Int) -> ([Int], [Int], [(Int, Int)], Int, Int)
 oneTurn info turn =
@@ -88,17 +93,17 @@ randomSequence total from to = replicateM total  $ randomRIO (from, to :: Int)
 
 simulation :: IO ()
 simulation = do
-  let biding = take totalTurns (randomRs (1, 25) (mkStdGen 42))
-  let asking = take totalTurns (randomRs (25, 50) (mkStdGen 41))
-  -- biding <- randomSequence totalTurns 1 25
-  -- asking <- randomSequence totalTurns 25 50
+  -- let biding = take numberOfOffers (randomRs (1, 25) (mkStdGen 42))
+  -- let asking = take numberOfOffers (randomRs (25, 50) (mkStdGen 41))
+  biding <- randomSequence numberOfOffers 1 25
+  asking <- randomSequence numberOfOffers 25 50
   let info = (biding, asking, replicate totalTurns (50, 1), minimum asking, 0)
 
   -- turns
   let randomnActions = take totalTurns $ randoms (mkStdGen 11) :: [Bool]
-  let randomnMargins = take totalTurns (randomRs (0, 10) (mkStdGen 41))
-  -- randomMargins <- randomSequence totalTurns 25 50
-  let turns = zip3 [1 .. totalTurns] randomnActions randomnMargins
+  -- let randomnMargins = take totalTurns (randomRs (0, 10) (mkStdGen 41))
+  randomMargins <- randomSequence totalTurns 25 50
+  let turns = zip3 [1 .. totalTurns] randomnActions randomMargins
   let (biding', asking', history', lastPrice', delta') = foldl oneTurn info turns
   -- graph
   chart history'
