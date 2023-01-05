@@ -8,7 +8,7 @@ numberOfOffers :: Int
 numberOfOffers = 10
 
 totalTurns :: Int
-totalTurns = 100
+totalTurns = 200
 
 toChar :: Int -> (Int, Int) -> Char
 toChar x (from, to) = case x of
@@ -70,8 +70,7 @@ oneTurn info turn =
     ( do
         let (_, _, _, _, delta) = info
         let (time, random, spread) = turn
-        -- TODO: spread is the same for all moves on each turn, wth
-        -- TODO: I'm guessing here is where it's not working
+        -- TODO: spread is the same for all moves on each turn
         let tendency = if delta < 0 then buyMarketOrder else sellMarketOrder
         let randomDecision = if random then sellMarketOrder else buyMarketOrder
         let decisions = [randomDecision, tendency, tendency]
