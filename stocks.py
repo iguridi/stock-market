@@ -1,13 +1,9 @@
 from random import randint, random
 
-
-def offer_margin():
-    return randint(0, 10)
-
-
 TIME = 100
 NUMBER_OF_OFFERS = 10
 
+def offer_margin(): return randint(0, 10)
 
 class Market:
     buying = [randint(4, 25) for _ in range(NUMBER_OF_OFFERS)]
@@ -20,12 +16,10 @@ class Market:
     delta = 0
 
     @property
-    def buy_price(self):
-        return min(self.selling)
+    def buy_price(self): return min(self.selling)
 
     @property
-    def sell_price(self):
-        return max(self.buying)
+    def sell_price(self): return max(self.buying)
 
     def buy(self, time):
         price = self.buy_price
@@ -51,7 +45,6 @@ class Market:
     def _new_sell_offer(self):
         self.selling.append(offer_margin() + self.sell_price)
 
-
 def interval_graph(market):
     max_history = market.max_history
     min_history = market.min_history
@@ -60,16 +53,12 @@ def interval_graph(market):
     for t in range(TIME):
         min_price = min_history[t]
         max_price = max_history[t]
-        for p in range(min_price, max_price):
-            grid[-p][t] = "|"
+        for p in range(min_price, max_price): grid[-p][t] = "|"
         grid[-min_price][t] = "+"
         grid[-max_price][t] = "+"
-
     print(f"\nprice({price})")
-    for string in ["".join(i) for i in grid]:
-        print("  |", string)
+    for string in ["".join(i) for i in grid]: print("  |", string)
     print("  |_" + "_" * TIME + f"__ time({TIME})")
-
 
 m = Market()
 
@@ -85,6 +74,5 @@ for t in range(TIME):
     if delta > 0:
         m.sell(t)
         m.sell(t)
-
 
 interval_graph(m)
