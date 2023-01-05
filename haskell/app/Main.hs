@@ -52,11 +52,11 @@ updateHistory price (minHist, maxHist) =
   )
 
 bid :: ([Int], [Int], [(Int, Int)], Int, Int) -> Int -> Int -> ([Int], [Int], [(Int, Int)], Int, Int)
-bid (biding, asking, history, lastPrice, delta) time margin = do
+bid (biding, asking, history, lastPrice, delta) time margin = trace ("DEBUG: bid  \n" ++ show history ++ "\n" ++ show lastPrice ++ "\n" ++ show delta) (do
   let price = minimum asking
   let asking' = replaceX asking price (margin + maximum biding)
   let history' = replaceNth time (updateHistory price) history
-  (biding, asking', history', price, price - lastPrice)
+  (biding, asking', history', price, price - lastPrice))
 
 ask :: ([Int], [Int], [(Int, Int)], Int, Int) -> Int -> Int -> ([Int], [Int], [(Int, Int)], Int, Int)
 ask (biding, asking, history, lastPrice, delta) time margin = do
