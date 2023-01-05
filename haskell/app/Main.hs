@@ -8,7 +8,7 @@ numberOfOffers :: Int
 numberOfOffers = 10
 
 totalTurns :: Int
-totalTurns = 75
+totalTurns = 50
 
 toChar :: Int -> (Int, Int) -> Char
 toChar x range = case x of
@@ -54,7 +54,7 @@ bid (biding, asking, history, lastPrice, delta) time margin =
     do
   let price = minimum asking
   let asking' = replaceX asking price (margin + maximum biding)
-  let history' = replaceNth time (updateHistory price) history
+  let history' = replaceNth (time - 1) (updateHistory price) history
   (biding, asking', history', price, price - lastPrice)
   -- )
 
@@ -63,15 +63,15 @@ ask (biding, asking, history, lastPrice, delta) time margin =
   -- trace ("DEBUG: ask  \n" ++ show biding ++ "\n" ++ show asking ++ "\n" ++ show history ++ "\n" ++ show lastPrice ++ "\n" ++ show delta ++ "\n" ++ show margin ++ "\n\n") (
     do
   let price = minimum biding
-  let biding' = replaceX biding price (margin + minimum asking)
-  let history' = replaceNth time (updateHistory price) history
+  let biding' = replaceX biding price (max (minimum asking - margin) 1)
+  let history' = replaceNth (time - 1) (updateHistory price) history
   (biding', asking, history', price, price - lastPrice)
   -- )
 
 
 oneTurn :: ([Int], [Int], [(Int, Int)], Int, Int) -> (Int, Bool, Int) -> ([Int], [Int], [(Int, Int)], Int, Int)
 oneTurn info turn =
-  -- trace ("DEBUG: oneTurn  \n" ++ show info ++ "\n" ++ show turn ++ "\n") (
+  trace ("DEBUG: oneTurn  \n" ++ show info ++ "\n" ++ show turn ++ "\n") (
     do
       let (_, _, _, _, delta) = info
       let (time, random, margin) = turn
@@ -81,7 +81,7 @@ oneTurn info turn =
       let info'' = tendency info' time margin
       let info''' = tendency info'' time margin
       info'''
-  -- )
+  )
 
 randomSequence :: Int -> Int -> Int -> IO [Int]
 randomSequence total from to = replicateM total  $ randomRIO (from, to :: Int)
