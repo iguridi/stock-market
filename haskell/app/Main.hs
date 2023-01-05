@@ -74,7 +74,7 @@ oneTurn info turn =
         -- TODO: I'm guessing here is where it's not working
         let tendency = if delta < 0 then buyMarketOrder else sellMarketOrder
         let randomDecision = if random then buyMarketOrder else sellMarketOrder
-        let desicions = [randomDecision]--, tendency, tendency]
+        let desicions = [randomDecision, tendency, tendency]
         foldl (\x y -> y x time spread) info desicions
     )
 
