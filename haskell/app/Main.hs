@@ -62,6 +62,7 @@ ask (biding, asking, history, lastPrice, delta) time margin = do
     let history' = replaceNth (time - 1) (updateHistory price) history
     (biding', asking, history', price, price - lastPrice)
 
+-- TODO: this is too much, use a monad?
 oneTurn :: ([Int], [Int], [(Int, Int)], Int, Int) -> (Int, Bool, Int) -> ([Int], [Int], [(Int, Int)], Int, Int)
 oneTurn info turn =
   trace
@@ -69,12 +70,12 @@ oneTurn info turn =
     ( do
         let (_, _, _, _, delta) = info
         let (time, random, margin) = turn
+        -- TODO: margin is the same for all moves on each turn, wth
+        -- TODO: I'm guessing here is where it's not working
+        let tendency = if delta < 0 then ask else bid
         let randomDecision = if random then ask else bid
-        let info' = randomDecision info time margin
-        let tendency = if delta > 0 then ask else bid
-        let info'' = tendency info' time margin
-        let info''' = tendency info'' time margin
-        info'''
+        let desicions = [randomDecision]--, tendency, tendency]
+        foldl (\x y -> y x time margin) info desicions
     )
 
 randomSequence :: Int -> Int -> Int -> IO [Int]
