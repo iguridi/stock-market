@@ -21,7 +21,7 @@ Example result:
 
 ## TODO
 
-[] haskell WIP
+[X] haskell
 [] prolog
 [] lisp
 [] elixir
