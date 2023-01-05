@@ -16,8 +16,8 @@ class Market:
     max_history = [0 for _ in range(TIME)]
     min_history = [1000 for _ in range(TIME)]
 
-    last_price = None
-    delta = None
+    last_price = min(selling)
+    delta = 0
 
     @property
     def buy_price(self):
@@ -40,8 +40,7 @@ class Market:
         self._new_buy_offer()
 
     def _exchange(self, price, time):
-        if self.last_price is not None:
-            self.delta = price - self.last_price
+        self.delta = price - self.last_price
         self.last_price = price
         self.min_history[time] = min(price, self.min_history[time])
         self.max_history[time] = max(price, self.max_history[time])
@@ -80,8 +79,6 @@ for t in range(TIME):
         m.buy(t)
     else:
         m.sell(t)
-    if delta is None:
-        continue
     if delta < 0:
         m.buy(t)
         m.buy(t)
