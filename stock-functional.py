@@ -31,6 +31,7 @@ def remove(values, value):
     return values[:index] + values[index + 1 :]
 
 def add_buy_offer(buying, price): return buying + (max(price - offer_margin(), 1),)
+
 def add_sell_offer(selling, price): return selling + (offer_margin() + price,)
 
 def write_history(price, time, h):
