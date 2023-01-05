@@ -64,6 +64,7 @@ m = Market()
 
 for t in range(TIME):
     delta = m.delta
+    decision = m.buy if random < 0.5 else m.sell
     if random() < 0.5:
         m.buy(t)
     else:
