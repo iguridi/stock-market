@@ -24,26 +24,48 @@ genColumns chartHeight values = do
   let joinColumns x acc = x ++ [createColumn chartHeight acc]
   foldl joinColumns [] values
 
--- makeOffers :: (Int, Int) -> [Int]
--- makeOffers range = do
---   let generator = mkStdGen 42
---   take numberOfOffers (randomRs range generator)
+mapOnce :: (a -> Maybe a) -> [a] -> [a]
+mapOnce _ []     = []
+mapOnce f (x:xs) = case f x of
+        Nothing -> x : mapOnce f xs
+        Just y  -> y : xs
 
-buy :: ([Int], [Int], [(Int, Int)], Int, Int) -> Int -> ([Int], [Int], [(Int, Int)], Int, Int)
-buy (biding, asking, history, lastPrice, delta) time =
-  (biding, asking, history, lastPrice, delta)
+replaceX :: [Int] -> Int -> Int -> [Int]
+replaceX items old new = mapOnce check items where
+    check item  | item == old = Just new
+                | otherwise   = Nothing
 
-sell :: ([Int], [Int], [(Int, Int)], Int, Int) -> Int -> ([Int], [Int], [(Int, Int)], Int, Int)
-sell (biding, asking, history, lastPrice, delta) time =
-  (biding, asking, history, lastPrice, delta)
+replaceNth :: Int -> (a -> a) -> [a] -> [a]
+replaceNth _ _ [] = []
+replaceNth n f (x:xs)
+  | n == 0 = f x:xs
+  | otherwise = x:replaceNth (n-1) f xs
+
+updateHistory :: Int -> (Int, Int) -> (Int, Int)
+updateHistory price (minHist, maxHist) = (min price minHist, max price maxHist)
 
 
-oneTurn :: ([Int], [Int], [(Int, Int)], Int, Int) -> (Int, Bool) -> ([Int], [Int], [(Int, Int)], Int, Int)
+bid :: ([Int], [Int], [(Int, Int)], Int, Int) -> Int -> Int -> ([Int], [Int], [(Int, Int)], Int, Int)
+bid (biding, asking, history, lastPrice, delta) time margin = do
+  let price = minimum asking
+  let asking' = replaceX asking price (margin + maximum biding)
+  let history' = replaceNth time (updateHistory price) history
+  let delta' = price - lastPrice
+  (biding, asking', history, price, delta')
+
+ask :: ([Int], [Int], [(Int, Int)], Int, Int) -> Int -> Int -> ([Int], [Int], [(Int, Int)], Int, Int)
+ask (biding, asking, history, lastPrice, delta) time margin = do
+  let price = minimum biding
+  let biding' = replaceX biding price (margin + minimum asking)
+  let history' = replaceNth time (updateHistory price) history
+  let delta' = price - lastPrice
+  (biding', asking, history, price, delta')
+
+
+oneTurn :: ([Int], [Int], [(Int, Int)], Int, Int) -> (Int, Bool, Int) -> ([Int], [Int], [(Int, Int)], Int, Int)
 oneTurn (biding, asking, history, lastPrice, delta) turn = do
-  -- result <- randomIO :: IO [Bool]
-  let time = fst turn
-  let direction = snd turn
-  let (biding', asking', history', lastPrice', delta') = if direction then sell (biding, asking, history, lastPrice, delta) time else buy (biding, asking, history, lastPrice, delta) time
+  let (time, decision, margin) = turn
+  let (biding', asking', history', lastPrice', delta') = if decision then ask (biding, asking, history, lastPrice, delta) time margin else bid (biding, asking, history, lastPrice, delta) time margin
   (biding', asking', history', lastPrice', delta')
 
 simulation :: IO ()
@@ -56,8 +78,9 @@ simulation = do
   let delta = 0
 
   -- turns
-  let randomness = take 5 $ randoms (mkStdGen 11) :: [Bool]
-  let (biding', asking', history', lastPrice', delta') = foldl oneTurn (biding, asking, history, lastPrice, delta) (zip [1 .. totalTurns] randomness)
+  let randomnActions = take totalTurns $ randoms (mkStdGen 11) :: [Bool]
+  let randomnMargins = take totalTurns $ randoms (mkStdGen 12) :: [Int]
+  let (biding', asking', history', lastPrice', delta') = foldl oneTurn (biding, asking, history, lastPrice, delta) (zip3 [1 .. totalTurns] randomnActions randomnMargins)
   -- graph
   chart history'
 
