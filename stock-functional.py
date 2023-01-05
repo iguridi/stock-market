@@ -65,9 +65,7 @@ def a_moment(info, t):
 
 buying = tuple(randint(1, 25) for _ in range(NUMBER_OF_OFFERS))
 selling = tuple(randint(25, 50) for _ in range(NUMBER_OF_OFFERS))
-
 last_price = min(selling)
-
 History = namedtuple("History", ["min_history", "max_history", "last_price", "delta"])
 history = History(
     max_history=tuple(0 for _ in range(TIME)),

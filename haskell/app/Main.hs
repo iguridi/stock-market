@@ -94,6 +94,7 @@ simulation = do
   randomSpreads <- randomSequence totalTurns 1 10
   let history = replicate totalTurns (50, 1)
   let info = (sellOrders, buyOrders, history, minimum buyOrders, 0)
+  -- TODO: make this next line random between runs
   let randomnActions = take totalTurns $ randoms (mkStdGen 11) :: [Bool]
   let turns = zip3 [1 .. totalTurns] randomnActions randomSpreads
   let (_, _, history', _, _) = foldl oneTurn info turns
