@@ -103,6 +103,7 @@ simulation = do
 
   let info = (biding, asking, replicate totalTurns (50, 1), minimum asking, 0)
   let randomnActions = take totalTurns $ randoms (mkStdGen 11) :: [Bool]
+  -- uncomment this to make randomness constant
   -- let biding = take numberOfOffers (randomRs (1, 25) (mkStdGen 42))
   -- let asking = take numberOfOffers (randomRs (25, 50) (mkStdGen 41))
   -- let randomnMargins = take totalTurns (randomRs (0, 10) (mkStdGen 41))
