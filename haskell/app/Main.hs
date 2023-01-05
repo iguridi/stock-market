@@ -63,8 +63,9 @@ ask (biding, asking, history, lastPrice, delta) time margin = do
 
 oneTurn :: ([Int], [Int], [(Int, Int)], Int, Int) -> (Int, Bool, Int) -> ([Int], [Int], [(Int, Int)], Int, Int)
 oneTurn info turn = do
-  let (time, decision, margin) = turn
-  if decision then ask info time margin else bid info time margin
+  let (time, random, margin) = turn
+  let decision = if random then ask else bid
+  decision info time margin
 
 simulation :: IO ()
 simulation = do
