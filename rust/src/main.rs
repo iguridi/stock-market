@@ -17,18 +17,19 @@ fn fifty_fifty() -> bool {
     rand::thread_rng().gen_bool(0.5)
 }
 
-fn remove_from_vector(vec: &Vec<i32>, value: i32) -> Vec<i32> {
-    let pos = vec
-        .iter()
-        .position(|x| *x == value)
-        .expect("value not found");
-    [&vec[..pos], &vec[pos + 1..]].concat()
-}
-
 trait Offering {
-    fn get_orders(&self) -> &Vec<i32>;
-    fn add_order(&mut self, order: i32);
-    fn remove_order(&mut self, order: i32);
+    fn get_orders(&mut self) -> &mut Vec<i32>;
+    fn add_order(&mut self, order: i32) {
+        self.get_orders().push(order);
+    }
+    fn remove_order(&mut self, order: i32) {
+        let orders = self.get_orders();
+        if let Some(index) = orders.iter().position(|&x| x == order) {
+            orders.remove(index);
+        } else {
+            panic!("this should never happen");
+        }
+    }
     fn best_price(&self) -> i32;
     fn new_limit_order(&mut self, price: i32) {
         self.add_order(price);
@@ -50,33 +51,27 @@ struct Biding {
 }
 
 impl Offering for Asking {
-    fn get_orders(&self) -> &Vec<i32> {
-        &self.orders
-    }
-    fn add_order(&mut self, order: i32) {
-        self.orders.push(order);
-    }
-    fn remove_order(&mut self, order: i32) {
-        self.orders = remove_from_vector(&self.orders, order);
+    fn get_orders(&mut self) -> &mut Vec<i32> {
+        &mut self.orders
     }
     fn best_price(&self) -> i32 {
-        self.orders.iter().min().unwrap().to_owned()
+        match self.orders.iter().min() {
+            Some(o) => o.to_owned(),
+            None => panic!("this shouldn't happen"),
+        }
     }
 
 }
 
 impl Offering for Biding {
-    fn get_orders(&self) -> &Vec<i32> {
-        &self.orders
-    }
-    fn add_order(&mut self, order: i32) {
-        self.orders.push(order);
-    }
-    fn remove_order(&mut self, order: i32) {
-        self.orders = remove_from_vector(&self.orders, order);
+    fn get_orders(&mut self) -> &mut Vec<i32> {
+        &mut self.orders
     }
     fn best_price(&self) -> i32 {
-        self.orders.iter().max().unwrap().to_owned()
+        match self.orders.iter().max() {
+            Some(o) => o.to_owned(),
+            None => panic!("this shouldn't happen"),
+        }
     }
 }
 
@@ -107,11 +102,7 @@ impl History {
         let mut chart = Chart::new(self.max());
         for turn in 0..TIME as usize {
             let (min_price, max_price) = self.range(turn);
-            for price in min_price..max_price {
-                chart.put(price, turn, " |");
-            }
-            chart.put(min_price, turn, " +");
-            chart.put(max_price, turn, " +");
+            chart.draw_interval(min_price, max_price, turn);
         }
         print!("{}", chart)
     }
@@ -133,6 +124,14 @@ impl<'a> Chart<'a> {
     fn put(&mut self, price: usize, turn: usize, icon: &'a str) {
         let len = self.grid.len();
         self.grid[len - price][turn] = icon
+    }
+
+    fn draw_interval(&mut self, min: usize, max: usize, turn: usize) {
+        for price in min..max {
+            self.put(price, turn, " |");
+        }
+        self.put(min, turn, " +");
+        self.put(max, turn, " +");
     }
 }
 
