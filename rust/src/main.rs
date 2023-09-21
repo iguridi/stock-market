@@ -179,15 +179,15 @@ impl Market {
             delta: 0,
         }
     }
-    fn buy_market_order(&mut self, time: usize) {
+    fn ask(&mut self, time: usize) {
         // We get the next asking price not from other asks, but from
-        // what the biddings are, with a decent margin for earnings
+        // what the bids are, with a decent margin for earnings
         // This is not very realistic, but oh well
         let price = self.asking.market_order(self.biding.next_order());
         self.record_exchange(time, price);
     }
 
-    fn sell_market_order(&mut self, time: usize) {
+    fn bid(&mut self, time: usize) {
         let price = self.biding.market_order(self.asking.next_order());
         self.record_exchange(time, price);
     }
@@ -201,17 +201,18 @@ impl Market {
     fn turn(&mut self, turn: usize) {
         let delta = self.delta;
         if fifty_fifty() {
-            self.buy_market_order(turn);
+            self.ask(turn);
         } else {
-            self.sell_market_order(turn);
+            self.bid(turn);
         }
+        // Make it swing more
         if delta < 0 {
-            self.buy_market_order(turn);
-            self.buy_market_order(turn);
+            self.ask(turn);
+            self.ask(turn);
         }
         if delta > 0 {
-            self.sell_market_order(turn);
-            self.sell_market_order(turn);
+            self.bid(turn);
+            self.bid(turn);
         }
     }
 
