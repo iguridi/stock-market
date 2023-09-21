@@ -1,8 +1,13 @@
 ## Stock market
 
-Script to generate stock market like graphs. The trends are produced by trader behavior and it has no external influences
+Small program to try programming languages
+- very fast to visually check is ok
+- no external dependencies
+- complex enough to give a decent idea of how the language behaves
+- result looks cool
 
-### Assumptions
+
+### It's a dumb program, so assumptions were made to make it simpler
 
 - There will be always NUMBER_OF_OFFERS sell orders
 - There will be always NUMBER_OF_OFFERS buy orders
