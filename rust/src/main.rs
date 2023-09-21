@@ -26,7 +26,9 @@ trait Offering {
     fn add_order(self: &mut Self, order: i32);
     fn remove_order(self: &mut Self, order: i32);
     fn best_price(&self) -> i32;
-    fn new_limit_order(self: &mut Self, price: i32);
+    fn new_limit_order(self: &mut Self, price: i32) {
+        self.add_order(price);
+    }
     fn market_order(self: &mut Self, new_limit_order: i32) -> i32 {
         let price = self.best_price();
         self.remove_order(price);
@@ -58,9 +60,7 @@ impl Offering for Asking {
     fn best_price(&self) -> i32 {
         self.orders.iter().min().unwrap().to_owned()
     }
-    fn new_limit_order(self: &mut Self, price: i32) {
-        self.add_order(price);
-    }
+
 }
 
 impl Offering for Biding {
@@ -76,9 +76,6 @@ impl Offering for Biding {
     fn best_price(&self) -> i32 {
         self.orders.iter().max().unwrap().to_owned()
     }
-    fn new_limit_order(self: &mut Self, price: i32) {
-        self.add_order(price);
-    }
 }
 
 #[derive(Debug)]
@@ -90,6 +87,7 @@ struct Market {
     last_price: i32,
     delta: i32,
 }
+
 
 impl Market {
     fn new() -> Self {
