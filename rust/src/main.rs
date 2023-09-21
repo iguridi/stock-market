@@ -9,16 +9,13 @@ fn random(from: i32, to: i32) -> i32 {
     rand::thread_rng().gen_range(from..to)
 }
 
-fn ask_bid_spread() -> i32 {
-    random(1, 12)
-}
-
 fn fifty_fifty() -> bool {
     rand::thread_rng().gen_bool(0.5)
 }
 
 trait Offering {
     fn get_orders(&mut self) -> &mut Vec<i32>;
+    fn next_order(&self) -> i32;
     fn add_order(&mut self, order: i32) {
         self.get_orders().push(order);
     }
@@ -40,6 +37,9 @@ trait Offering {
         self.add_order(new_limit_order);
         price
     }
+    fn ask_bid_spread() -> i32 {
+        random(1, 12)
+    }
 }
 
 struct Asking {
@@ -60,6 +60,9 @@ impl Offering for Asking {
             None => panic!("this shouldn't happen"),
         }
     }
+    fn next_order(&self) -> i32 {
+        self.best_price() + Self::ask_bid_spread()
+    }
 }
 
 impl Offering for Biding {
@@ -71,6 +74,9 @@ impl Offering for Biding {
             Some(o) => o.to_owned(),
             None => panic!("this shouldn't happen"),
         }
+    }
+    fn next_order(&self) -> i32 {
+        cmp::max(self.best_price() - Self::ask_bid_spread(), 1)
     }
 }
 
@@ -174,14 +180,15 @@ impl Market {
         }
     }
     fn buy_market_order(&mut self, time: usize) {
-        let new_limit_order = cmp::max(self.biding.best_price() - ask_bid_spread(), 1);
-        let price = self.asking.market_order(new_limit_order);
+        // We get the next asking price not from other asks, but from
+        // what the biddings are, with a decent margin for earnings
+        // This is not very realistic, but oh well
+        let price = self.asking.market_order(self.biding.next_order());
         self.record_exchange(time, price);
     }
 
     fn sell_market_order(&mut self, time: usize) {
-        let new_limit_order = self.asking.best_price() + ask_bid_spread();
-        let price = self.biding.market_order(new_limit_order);
+        let price = self.biding.market_order(self.asking.next_order());
         self.record_exchange(time, price);
     }
 
