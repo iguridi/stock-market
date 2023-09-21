@@ -59,7 +59,7 @@ impl Offering for Asking {
         self.orders.iter().min().unwrap().to_owned()
     }
     fn new_limit_order(self: &mut Self, price: i32) {
-        self.orders.push(price);
+        self.add_order(price);
     }
 }
 
@@ -77,7 +77,7 @@ impl Offering for Biding {
         self.orders.iter().max().unwrap().to_owned()
     }
     fn new_limit_order(self: &mut Self, price: i32) {
-        self.orders.push(price);
+        self.add_order(price);
     }
 }
 
@@ -92,6 +92,22 @@ struct Market {
 }
 
 impl Market {
+    fn new() -> Self {
+        let orders = (0..NUMBER_OF_ORDERS).map(|_x| random(4, 25)).collect();
+        let biding = Biding { orders };
+        let orders = (0..NUMBER_OF_ORDERS).map(|_x| random(25, 50)).collect();
+        let asking = Asking { orders };
+        let first_price = biding.best_price();
+
+        Self {
+            biding,
+            asking,
+            max_history: (0..TIME).map(|_| 0).collect(),
+            min_history: (0..TIME).map(|_| 1000).collect(),
+            last_price: first_price,
+            delta: 0,
+        }
+    }
     fn buy_market_order(self: &mut Self, time: usize) {
         let new_limit_order = cmp::max(self.biding.best_price() - ask_bid_spread(), 1);
         let price = self.asking.market_order(new_limit_order);
@@ -141,24 +157,7 @@ fn interval_graph(market: &Market) {
 }
 
 fn main() {
-    let biding = Biding {
-        orders: (0..NUMBER_OF_ORDERS).map(|_x| random(4, 25)).collect(),
-    };
-
-    let asking = Asking {
-        orders: (0..NUMBER_OF_ORDERS).map(|_x| random(25, 50)).collect(),
-    };
-
-    let first_price = biding.best_price();
-
-    let mut market = Market {
-        asking,
-        biding,
-        max_history: (0..TIME).map(|_| 0).collect(),
-        min_history: (0..TIME).map(|_| 1000).collect(),
-        last_price: first_price,
-        delta: 0,
-    };
+    let mut market = Market::new();
 
     for turn in 0..TIME as usize {
         let delta = market.delta;
