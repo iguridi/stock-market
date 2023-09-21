@@ -60,7 +60,6 @@ impl Offering for Asking {
             None => panic!("this shouldn't happen"),
         }
     }
-
 }
 
 impl Offering for Biding {
@@ -75,10 +74,9 @@ impl Offering for Biding {
     }
 }
 
-
 struct History {
-    min:  Vec<i32>,
-    max:  Vec<i32>,
+    min: Vec<i32>,
+    max: Vec<i32>,
 }
 
 impl History {
@@ -93,7 +91,10 @@ impl History {
         self.max[time] = cmp::max(price, self.max[time]);
     }
     fn max(&self) -> i32 {
-        cmp::max(self.min.iter().max().unwrap().to_owned(), self.max.iter().max().unwrap().to_owned())
+        cmp::max(
+            self.min.iter().max().unwrap().to_owned(),
+            self.max.iter().max().unwrap().to_owned(),
+        )
     }
     fn range(&self, time: usize) -> (usize, usize) {
         (self.min[time] as usize, self.max[time] as usize)
@@ -143,7 +144,7 @@ impl<'a> fmt::Display for Chart<'a> {
             writeln!(f, " | {}", row.concat())?;
         }
 
-        let underscores =  "_".repeat(2 * TIME as usize);
+        let underscores = "_".repeat(2 * TIME as usize);
         write!(f, " |_{}__ time({})", underscores, TIME)
     }
 }
@@ -211,8 +212,6 @@ impl Market {
         self.history.chart()
     }
 }
-
-
 
 fn main() {
     let mut market = Market::new();
