@@ -103,6 +103,44 @@ impl History {
     fn range(&self, time: usize) -> (usize, usize) {
         (self.min[time] as usize, self.max[time] as usize)
     }
+    fn chart(&self) {
+        let price = self.max();
+        let mut grid: Vec<Vec<&str>> = (0..price + 1)
+            .map(|_| (0..TIME).map(|_| "  ").collect())
+            .collect();
+        let grid_length = &grid.len();
+        for turn in 0..TIME as usize {
+            let (min_price, max_price) = self.range(turn);
+            for price in min_price..max_price {
+                grid[grid_length - price][turn] = " |";
+            }
+            grid[grid_length - min_price][turn] = " +";
+            grid[grid_length - max_price][turn] = " +";
+        }
+        print!("\nprice({})\n", price);
+        for row in &grid {
+            let string_repr = row.join("");
+            print!(" | {}\n", string_repr);
+        }
+        print!(" |_{}__ time({}", str::repeat("_", 2 * TIME as usize), TIME);
+    }
+}
+
+struct Chart<'a> {
+    grid: Vec<Vec<&'a str>>,
+}
+
+impl Chart<'_> {
+    fn new(price: usize) -> Self {
+        let grid = (0..price + 1)
+            .map(|_| (0..TIME).map(|_| "  ").collect())
+            .collect();
+        Self { grid }
+    }
+
+    fn len(&self) -> usize {
+        self.grid.len()
+    }
 }
 
 struct Market {
@@ -164,26 +202,8 @@ impl Market {
         }
     }
 
-    fn interval_graph(&self) {
-        let price = self.history.max();
-        let mut grid: Vec<Vec<&str>> = (0..price + 1)
-            .map(|_| (0..TIME).map(|_| "  ").collect())
-            .collect();
-        let grid_length = &grid.len();
-        for turn in 0..TIME as usize {
-            let (min_price, max_price) = self.history.range(turn);
-            for price in min_price..max_price {
-                grid[grid_length - price][turn] = " |";
-            }
-            grid[grid_length - min_price][turn] = " +";
-            grid[grid_length - max_price][turn] = " +";
-        }
-        print!("\nprice({})\n", price);
-        for row in &grid {
-            let string_repr = row.join("");
-            print!(" | {}\n", string_repr);
-        }
-        print!(" |_{}__ time({}", str::repeat("_", 2 * TIME as usize), TIME);
+    fn chart(&self) {
+        self.history.chart()
     }
 }
 
@@ -194,5 +214,5 @@ fn main() {
     for turn in 0..TIME as usize {
         market.turn(turn)
     }
-    market.interval_graph();
+    market.chart();
 }
