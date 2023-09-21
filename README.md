@@ -21,14 +21,15 @@ Example result:
 
 ## TODO
 
-[X] haskell
-[] prolog
-[] lisp
-[] elixir
-[] clojure
-[] nim
-[] c++
-[] nix
-[X] rust
-[X] Javascript
-[X] Python
+- [x] haskell
+- [ ] prolog
+- [ ] lisp
+- [ ] elixir
+- [ ] clojure
+- [ ] nim
+- [ ] c++
+- [ ] nix
+- [x] rust
+- [x] Javascript
+- [x] Python
+- [ ] Ruby
