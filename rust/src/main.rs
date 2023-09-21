@@ -1,6 +1,9 @@
 use rand::Rng; // 0.8.0
 use std::cmp;
 
+const TIME: i32 = 100;
+const NUMBER_OF_ORDERS: i32 = 10;
+
 fn random(from: i32, to: i32) -> i32 {
     // Generate random number in the range [from, to-1]
     rand::thread_rng().gen_range(from..to)
@@ -17,9 +20,6 @@ fn remove_from_vector(vec: &Vec<i32>, value: i32) -> Vec<i32> {
         .expect("value not found");
     [&vec[..pos], &vec[pos + 1..]].concat()
 }
-
-const TIME: i32 = 100;
-const NUMBER_OF_ORDERS: i32 = 10;
 
 trait Offering {
     fn get_orders(&self) -> &Vec<i32>;
