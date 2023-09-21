@@ -16,6 +16,8 @@ fn fifty_fifty() -> bool {
 trait Offering {
     fn get_orders(&mut self) -> &mut Vec<i32>;
     fn next_order(&self) -> i32;
+    fn best_price(&self) -> i32;
+
     fn add_order(&mut self, order: i32) {
         self.get_orders().push(order);
     }
@@ -27,7 +29,6 @@ trait Offering {
             panic!("this should never happen");
         }
     }
-    fn best_price(&self) -> i32;
     fn new_limit_order(&mut self, price: i32) {
         self.add_order(price);
     }
@@ -37,6 +38,7 @@ trait Offering {
         self.add_order(new_limit_order);
         price
     }
+
     fn ask_bid_spread() -> i32 {
         random(1, 12)
     }
