@@ -13,6 +13,10 @@ fn ask_bid_spread() -> i32 {
     random(1, 12)
 }
 
+fn fifty_fifty() -> bool {
+    rand::thread_rng().gen_bool(0.5)
+}
+
 fn remove_from_vector(vec: &Vec<i32>, value: i32) -> Vec<i32> {
     let pos = vec
         .iter()
@@ -23,13 +27,13 @@ fn remove_from_vector(vec: &Vec<i32>, value: i32) -> Vec<i32> {
 
 trait Offering {
     fn get_orders(&self) -> &Vec<i32>;
-    fn add_order(self: &mut Self, order: i32);
-    fn remove_order(self: &mut Self, order: i32);
+    fn add_order(&mut self, order: i32);
+    fn remove_order(&mut self, order: i32);
     fn best_price(&self) -> i32;
-    fn new_limit_order(self: &mut Self, price: i32) {
+    fn new_limit_order(&mut self, price: i32) {
         self.add_order(price);
     }
-    fn market_order(self: &mut Self, new_limit_order: i32) -> i32 {
+    fn market_order(&mut self, new_limit_order: i32) -> i32 {
         let price = self.best_price();
         self.remove_order(price);
         self.add_order(new_limit_order);
@@ -37,12 +41,10 @@ trait Offering {
     }
 }
 
-#[derive(Debug)]
 struct Asking {
     orders: Vec<i32>,
 }
 
-#[derive(Debug)]
 struct Biding {
     orders: Vec<i32>,
 }
@@ -51,10 +53,10 @@ impl Offering for Asking {
     fn get_orders(&self) -> &Vec<i32> {
         &self.orders
     }
-    fn add_order(self: &mut Self, order: i32) {
+    fn add_order(&mut self, order: i32) {
         self.orders.push(order);
     }
-    fn remove_order(self: &mut Self, order: i32) {
+    fn remove_order(&mut self, order: i32) {
         self.orders = remove_from_vector(&self.orders, order);
     }
     fn best_price(&self) -> i32 {
@@ -67,24 +69,15 @@ impl Offering for Biding {
     fn get_orders(&self) -> &Vec<i32> {
         &self.orders
     }
-    fn add_order(self: &mut Self, order: i32) {
+    fn add_order(&mut self, order: i32) {
         self.orders.push(order);
     }
-    fn remove_order(self: &mut Self, order: i32) {
+    fn remove_order(&mut self, order: i32) {
         self.orders = remove_from_vector(&self.orders, order);
     }
     fn best_price(&self) -> i32 {
         self.orders.iter().max().unwrap().to_owned()
     }
-}
-
-
-struct Market {
-    biding: Biding,
-    asking: Asking,
-    history: History,
-    last_price: i32,
-    delta: i32,
 }
 
 
@@ -112,7 +105,13 @@ impl History {
     }
 }
 
-
+struct Market {
+    biding: Biding,
+    asking: Asking,
+    history: History,
+    last_price: i32,
+    delta: i32,
+}
 
 impl Market {
     fn new() -> Self {
@@ -130,22 +129,39 @@ impl Market {
             delta: 0,
         }
     }
-    fn buy_market_order(self: &mut Self, time: usize) {
+    fn buy_market_order(&mut self, time: usize) {
         let new_limit_order = cmp::max(self.biding.best_price() - ask_bid_spread(), 1);
         let price = self.asking.market_order(new_limit_order);
         self.record_exchange(time, price);
     }
 
-    fn sell_market_order(self: &mut Self, time: usize) {
+    fn sell_market_order(&mut self, time: usize) {
         let new_limit_order = self.asking.best_price() + ask_bid_spread();
         let price = self.biding.market_order(new_limit_order);
         self.record_exchange(time, price);
     }
 
-    fn record_exchange(self: &mut Self, time: usize, price: i32) {
+    fn record_exchange(&mut self, time: usize, price: i32) {
         self.delta = price - self.last_price;
         self.last_price = price;
         self.history.register(time, price);
+    }
+
+    fn turn(&mut self, turn: usize) {
+        let delta = self.delta;
+        if fifty_fifty() {
+            self.buy_market_order(turn);
+        } else {
+            self.sell_market_order(turn);
+        }
+        if delta < 0 {
+            self.buy_market_order(turn);
+            self.buy_market_order(turn);
+        }
+        if delta > 0 {
+            self.sell_market_order(turn);
+            self.sell_market_order(turn);
+        }
     }
 
     fn interval_graph(&self) {
@@ -175,23 +191,8 @@ impl Market {
 
 fn main() {
     let mut market = Market::new();
-
     for turn in 0..TIME as usize {
-        let delta = market.delta;
-        if rand::thread_rng().gen_bool(0.5) {
-            market.buy_market_order(turn);
-        } else {
-            market.sell_market_order(turn);
-        }
-        if delta < 0 {
-            market.buy_market_order(turn);
-            market.buy_market_order(turn);
-        }
-        if delta > 0 {
-            market.sell_market_order(turn);
-            market.sell_market_order(turn);
-        }
+        market.turn(turn)
     }
-
     market.interval_graph();
 }
