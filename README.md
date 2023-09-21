@@ -20,16 +20,15 @@ Example result:
 
 
 ## TODO
-
-- [x] haskell
-- [ ] prolog
-- [ ] lisp
-- [ ] elixir
-- [ ] clojure
-- [ ] nim
-- [ ] c++
-- [ ] nix
-- [x] rust
-- [x] Javascript
-- [x] Python
-- [ ] Ruby
+- ✅ haskell
+- ⬜️ prolog
+- ⬜️ lisp
+- ⬜️ elixir
+- ⬜️ clojure
+- ⬜️ nim
+- ⬜️ c++
+- ⬜️ nix
+- ✅ rust
+- ✅ Javascript
+- ✅ Python
+- ⬜️ Ruby
