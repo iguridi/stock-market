@@ -1,5 +1,10 @@
 require 'securerandom'
 
+
+TIME = 100
+NUMBER_OF_ORDERS = 10
+
+
 def random(from, to)
   SecureRandom.random_number(to - from) + from
 end
@@ -8,7 +13,12 @@ def ask_bid_spread
   random(1, 12)
 end
 
+
 module Offering
+  def initialize(orders)
+    @orders = orders
+  end
+
   def get_orders
     @orders
   end
@@ -23,6 +33,7 @@ module Offering
         raise "order doesn't exist somehow"
     else
         @orders.delete_at(index)
+    end
   end
 
   def best_price
@@ -44,10 +55,6 @@ end
 class Asking
   include Offering
 
-  def initialize(orders)
-    @orders = orders
-  end
-
   def best_price
     @orders.min
   end
@@ -56,22 +63,17 @@ end
 class Biding
   include Offering
 
-  def initialize(orders)
-    @orders = orders
-  end
-
   def best_price
     @orders.max
   end
 end
 
 class Market
-  def initialize
-    biding = Biding.new(NUMBER_OF_ORDERS.map { random(4, 25) })
-    asking = Asking.new(NUMBER_OF_ORDERS.map { random(25, 50) })
+  attr_reader :delta
 
-    @biding = biding
-    @asking = asking
+  def initialize
+    @biding = Biding.new((0...NUMBER_OF_ORDERS).map { random(4, 25) })
+    @asking = Asking.new((0...NUMBER_OF_ORDERS).map { random(25, 50) })
     @max_history = Array.new(TIME, 0)
     @min_history = Array.new(TIME, 1000)
     @last_price = @biding.best_price
@@ -102,20 +104,17 @@ class Market
     min_history = @min_history
     max_price = [max_history.max, min_history.max].max
 
-    # Initialize grid with empty strings
     grid = Array.new(max_price + 1) { Array.new(TIME, '  ') }
-
-    grid_length = grid.length
 
     (0...TIME).each do |turn|
       min_price = min_history[turn]
       max_price = max_history[turn]
 
       (min_price...max_price).each do |price|
-        grid[grid_length - price - 1][turn] = ' |'
+        grid[grid.length - price - 1][turn] = ' |'
       end
-      grid[grid_length - min_price - 1][turn] = ' +'
-      grid[grid_length - max_price - 1][turn] = ' +'
+      grid[grid.length - min_price - 1][turn] = ' +'
+      grid[grid.length - max_price - 1][turn] = ' +'
     end
 
     puts "\nprice(#{max_price})"
@@ -128,15 +127,11 @@ class Market
   end
 end
 
-# Constants
-TIME = 100
-NUMBER_OF_ORDERS = 10
 
-# Main Program
 market = Market.new
 
 TIME.times do |turn|
-  delta = market.instance_variable_get(:@delta)
+  delta = market.delta
   if SecureRandom.random_number < 0.5
     market.buy_market_order(turn)
   else
@@ -154,5 +149,4 @@ TIME.times do |turn|
   end
 end
 
-# Print graph
-# interval_graph(market)  # Uncomment this when you implement interval_graph
+market.interval_graph
