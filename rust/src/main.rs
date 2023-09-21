@@ -1,5 +1,5 @@
 use rand::Rng; // 0.8.0
-use std::cmp;
+use std::{cmp, fmt};
 
 const TIME: i32 = 100;
 const NUMBER_OF_ORDERS: i32 = 10;
@@ -104,42 +104,48 @@ impl History {
         (self.min[time] as usize, self.max[time] as usize)
     }
     fn chart(&self) {
-        let price = self.max();
-        let mut grid: Vec<Vec<&str>> = (0..price + 1)
-            .map(|_| (0..TIME).map(|_| "  ").collect())
-            .collect();
-        let grid_length = &grid.len();
+        let mut chart = Chart::new(self.max());
         for turn in 0..TIME as usize {
             let (min_price, max_price) = self.range(turn);
             for price in min_price..max_price {
-                grid[grid_length - price][turn] = " |";
+                chart.put(price, turn, " |");
             }
-            grid[grid_length - min_price][turn] = " +";
-            grid[grid_length - max_price][turn] = " +";
+            chart.put(min_price, turn, " +");
+            chart.put(max_price, turn, " +");
         }
-        print!("\nprice({})\n", price);
-        for row in &grid {
-            let string_repr = row.join("");
-            print!(" | {}\n", string_repr);
-        }
-        print!(" |_{}__ time({}", str::repeat("_", 2 * TIME as usize), TIME);
+        print!("{}", chart)
     }
 }
 
 struct Chart<'a> {
     grid: Vec<Vec<&'a str>>,
+    max: i32,
 }
 
-impl Chart<'_> {
-    fn new(price: usize) -> Self {
-        let grid = (0..price + 1)
+impl<'a> Chart<'a> {
+    fn new(max: i32) -> Self {
+        let grid = (0..max + 1)
             .map(|_| (0..TIME).map(|_| "  ").collect())
             .collect();
-        Self { grid }
+        Self { grid, max }
     }
 
-    fn len(&self) -> usize {
-        self.grid.len()
+    fn put(&mut self, price: usize, turn: usize, icon: &'a str) {
+        let len = self.grid.len();
+        self.grid[len - price][turn] = icon
+    }
+}
+
+impl<'a> fmt::Display for Chart<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        writeln!(f, "\nprice({})", self.max)?;
+
+        for row in &self.grid {
+            writeln!(f, " | {}", row.concat())?;
+        }
+
+        let underscores =  "_".repeat(2 * TIME as usize);
+        write!(f, " |_{}__ time({})", underscores, TIME)
     }
 }
 
