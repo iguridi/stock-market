@@ -102,8 +102,8 @@ impl History {
     fn chart(&self) {
         let mut chart = Chart::new(self.max());
         for turn in 0..TIME as usize {
-            let (min_price, max_price) = self.range(turn);
-            chart.draw_interval(min_price, max_price, turn);
+            let (from, to) = self.range(turn);
+            chart.draw_interval(from, to, turn);
         }
         print!("{}", chart)
     }
