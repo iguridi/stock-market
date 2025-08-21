@@ -34,7 +34,8 @@ Example result:
 - ⬜️ c++
 - ⬜️ nix
 - ✅ rust
-- ✅ Javascript
-- ✅ Python
-- ✅ Ruby
+- ✅ javascript
+- ✅ python
+- ✅ ruby
 - ⬜️ vlang
+- ⬜️ go
