@@ -36,4 +36,5 @@ Example result:
 - ✅ rust
 - ✅ Javascript
 - ✅ Python
-- ⬜️ Ruby
+- ✅ Ruby
+- ⬜️ vlang
