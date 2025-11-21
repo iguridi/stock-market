@@ -26,20 +26,6 @@ type Market {
   )
 }
 
-fn init_market() -> Result(Market, Nil) {
-  let buying =
-    list.repeat(0, number_of_offers)
-    |> list.map(fn(_) { int.random(25) })
-  let selling =
-    list.repeat(0, number_of_offers)
-    |> list.map(fn(_) { int.random(25) + 25 })
-  let max_history = list.repeat(0, time + 1)
-  let min_history = list.repeat(100, time + 1)
-  use last_price <- result.try(min(selling))
-
-  Ok(Market(buying, selling, max_history, min_history, last_price, 0))
-}
-
 fn min(l: List(Int)) {
   list.reduce(l, int.min)
 }
@@ -67,19 +53,15 @@ fn buy(m: Market, time_idx) -> Result(Market, Nil) {
     time_idx,
     ask_price,
   ))
-  use max_buying <- result.map(max(m.buying))
+  use max_buying <- result.try(max(m.buying))
+  let selling = replace_x(m.selling, ask_price, spread() + max_buying)
 
-  Market(
-    ..m,
-    selling: replace_x(m.selling, ask_price, spread() + max_buying),
-    min_history:,
-    delta: ask_price - m.last_price,
-  )
+  Ok(Market(..m, selling:, min_history:, delta: ask_price - m.last_price))
 }
 
 fn sell(m: Market, time_idx) -> Result(Market, Nil) {
   // Get the best price to sell to
-  use bid_price <- result.try(list.reduce(m.buying, int.max))
+  use bid_price <- result.try(max(m.buying))
   // Record transaction
   use max_history <- result.try(set_nth_element(
     m.max_history,
@@ -87,7 +69,7 @@ fn sell(m: Market, time_idx) -> Result(Market, Nil) {
     bid_price,
   ))
 
-  use min_selling <- result.map(list.reduce(m.selling, int.min))
+  use min_selling <- result.map(min(m.selling))
 
   Market(
     ..m,
@@ -106,66 +88,85 @@ fn set_nth_element(l: List(a), i: Int, v: a) -> Result(List(a), Nil) {
   }
 }
 
-fn chart(m: Market) -> Result(Nil, Nil) {
-  use history <- result.try(list.strict_zip(m.min_history, m.max_history))
-  assert list.length(history) == time + 1
-
-  // Get height needed to fit chart
-  use chart_height <- result.map(max(list.append(m.min_history, m.max_history)))
-
-  let chart_text =
-    history
-    // Paint chart intervals
-    |> list.map(fn(v) {
-      let #(from, to) = v
-      list.range(1, chart_height)
-      |> list.map(fn(x) {
-        case x {
-          x if x > from && x < to -> "|"
-          x if x == from || x == to -> "+"
-          _ -> " "
-        }
-      })
-    })
-    // Organize data to final position in matrix
-    |> list.map(list.reverse)
-    |> list.transpose
-    // Paint y axis
-    |> list.map(fn(col) { ["|", ..col] })
-    // Paint x axis
-    |> list.append([
-      list.range(0, time + 1) |> list.map(fn(_) { "-" }),
-    ])
-    // Make matrix into plain text
-    |> list.map(fn(row) { string.concat(row) })
-    |> string.join("\n")
-
-  io.print("\n\n" <> chart_text)
-  Nil
-}
-
-fn buy_or_sell(m: Result(Market, Nil), t) -> Result(Market, Nil) {
-  // Decision
-  use m <- result.try(m)
-  use m1 <- result.try(case float.random() {
-    x if x <. 0.5 -> buy(m, t)
-    _ -> sell(m, t)
-  })
-
-  // Tendency, to make it more divergent
-  use m2 <- result.try(case m1.delta <= 0 {
-    True -> buy(m1, t)
-    False -> sell(m1, t)
-  })
-  case m2.delta <= 0 {
-    True -> buy(m2, t)
-    False -> sell(m2, t)
-  }
-}
-
 pub fn main() -> Result(Nil, Nil) {
+  // Initial state
+  use market <- result.try({
+    let buying =
+      list.repeat(0, number_of_offers)
+      |> list.map(fn(_) { int.random(25) })
+    let selling =
+      list.repeat(0, number_of_offers)
+      |> list.map(fn(_) { int.random(25) + 25 })
+    let max_history = list.repeat(0, time + 1)
+    let min_history = list.repeat(100, time + 1)
+
+    use last_price <- result.try(min(selling))
+    Ok(Market(buying, selling, max_history, min_history, last_price, 0))
+  })
+
   // Run simulation
-  list.range(0, time)
-  |> list.fold(init_market(), buy_or_sell)
-  |> result.try(chart)
+  use final_state <- result.try({
+    list.fold(list.range(0, time), Ok(market), fn(acc, t) {
+      use m <- result.try(acc)
+      // Decision
+      use m1 <- result.try(case float.random() {
+        x if x <. 0.5 -> buy(m, t)
+        _ -> sell(m, t)
+      })
+
+      // Tendency, to make it more divergent
+      use m2 <- result.try(case m1.delta <= 0 {
+        True -> buy(m1, t)
+        False -> sell(m1, t)
+      })
+      case m2.delta <= 0 {
+        True -> buy(m2, t)
+        False -> sell(m2, t)
+      }
+    })
+  })
+
+  // Chart
+  {
+    use history <- result.try(list.strict_zip(
+      final_state.min_history,
+      final_state.max_history,
+    ))
+    assert list.length(history) == time + 1
+
+    // Get height needed to fit chart
+    use chart_height <- result.map(
+      max(list.append(final_state.min_history, final_state.max_history)),
+    )
+
+    let chart_text =
+      history
+      // Paint chart intervals
+      |> list.map(fn(v) {
+        let #(from, to) = v
+        list.range(1, chart_height)
+        |> list.map(fn(x) {
+          case x {
+            x if x > from && x < to -> "|"
+            x if x == from || x == to -> "+"
+            _ -> " "
+          }
+        })
+      })
+      // Organize data to final position in matrix
+      |> list.map(list.reverse)
+      |> list.transpose
+      // Paint y axis
+      |> list.map(fn(col) { ["|", ..col] })
+      // Paint x axis
+      |> list.append([
+        list.range(0, time + 1) |> list.map(fn(_) { "-" }),
+      ])
+      // Make matrix into plain text
+      |> list.map(fn(row) { string.concat(row) })
+      |> string.join("\n")
+
+    io.print("\n\n" <> chart_text)
+    Nil
+  }
 }
