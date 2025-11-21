@@ -2,9 +2,6 @@ import gleam/int
 import gleam/io
 import gleam/list
 
-import non_empty_list.{type NonEmptyList}
-import non_empty_list as nel
-
 const time = 100
 
 const number_of_offers = 10
@@ -15,10 +12,10 @@ pub fn offer_margin() -> Int {
 
 type Market {
   Market(
-    buying: NonEmptyList(Int),
-    selling: NonEmptyList(Int),
-    max_history: NonEmptyList(Int),
-    min_history: NonEmptyList(Int),
+    buying: List(Int),
+    selling: List(Int),
+    max_history: List(Int),
+    min_history: List(Int),
     last_price: Int,
     delta: Int,
   )
@@ -28,11 +25,9 @@ fn init_market() -> Market {
   let buying =
     list.repeat(0, number_of_offers)
     |> list.map(fn(_) { int.random(25) })
-    |> nel.from_list
   let selling =
     list.repeat(0, number_of_offers)
     |> list.map(fn(_) { int.random(25) + 25 })
-    |> nel.from_list
   let max_history = list.repeat(time, 0)
   let min_history = list.repeat(time, 1000)
 
@@ -41,8 +36,9 @@ fn init_market() -> Market {
   Market(buying, selling, max_history, min_history, last_price, 0)
 }
 
-fn min(l: NonEmptyList(Int)) -> Int {
-  nel.reduce(l, fn(a, b) {
+fn min(l: List(Int)) -> Int {
+  let assert [first, ..rest] = l
+  list.fold(rest, first, fn(a, b) {
     case a <= b {
       True -> a
       False -> b
@@ -50,8 +46,9 @@ fn min(l: NonEmptyList(Int)) -> Int {
   })
 }
 
-fn max(l: NonEmptyList(Int)) -> Int {
-  nel.reduce(l, fn(a, b) {
+fn max(l: List(Int)) -> Int {
+  let assert [first, ..rest] = l
+  list.fold(rest, first, fn(a, b) {
     case a >= b {
       True -> a
       False -> b
@@ -75,9 +72,9 @@ pub fn remove_first_occurrence(list: List(a), item: a) -> List(a) {
 
 fn buy(market: Market, time_idx: Int) -> Market {
   let price = min(market.selling)
-  let selling = remove_first_occurrence(nel.to_list(market.selling), price)
+  let selling = remove_first_occurrence(market.selling, price)
   let market = exchange(market, price, time_idx)
-  let selling = nel.new(offer_margin() + max(market.buying), selling)
+  let selling = [offer_margin() + max(market.buying), ..selling]
   Market(..market, selling:)
 }
 
@@ -103,23 +100,20 @@ fn exchange(market: Market, price: Int, time_idx: Int) -> Market {
   let delta = price - market.last_price
   let last_price = price
 
-  let minh = market.min_history |> nel.to_list
   let min_history =
     set_nth_element(
-      minh,
+      market.min_history,
       time_idx,
-      min(nel.new(price, [nth_element(minh, time_idx)])),
+      min([price, nth_element(market.min_history, time_idx)]),
     )
-    |> nel.from_list
 
-  let maxh = market.min_history |> nel.to_list
   let max_history =
     set_nth_element(
-      maxh,
+      market.min_history,
       time_idx,
-      max(nel.new(price, [nth_element(minh, time_idx)])),
+      max([price, nth_element(market.min_history, time_idx)]),
     )
-    |> nel.from_list
+
   Market(
     market.buying,
     market.selling,
