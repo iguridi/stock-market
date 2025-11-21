@@ -26,7 +26,7 @@ type Market {
   )
 }
 
-fn init_market() {
+fn init_market() -> Result(Market, Nil) {
   let buying =
     list.repeat(0, number_of_offers)
     |> list.map(fn(_) { int.random(25) })
@@ -35,9 +35,9 @@ fn init_market() {
     |> list.map(fn(_) { int.random(25) + 25 })
   let max_history = list.repeat(0, time + 1)
   let min_history = list.repeat(100, time + 1)
-  use last_price <- result.map(min(selling))
+  use last_price <- result.try(min(selling))
 
-  Market(buying, selling, max_history, min_history, last_price, 0)
+  Ok(Market(buying, selling, max_history, min_history, last_price, 0))
 }
 
 fn min(l: List(Int)) {
@@ -93,8 +93,8 @@ fn set_nth_element(l: List(a), i: Int, v: a) -> List(a) {
   list.append(first, [v, ..rest])
 }
 
-fn chart(m: Market) {
-  let assert Ok(history) = list.strict_zip(m.min_history, m.max_history)
+fn chart(m: Market) -> Result(Nil, Nil) {
+  use history <- result.try(list.strict_zip(m.min_history, m.max_history))
   assert list.length(history) == time + 1
 
   // Get height needed to fit chart
@@ -150,11 +150,9 @@ fn buy_or_sell(m: Result(Market, Nil), t) -> Result(Market, Nil) {
   }
 }
 
-pub fn main() {
-  use m <- result.map(init_market())
-
+pub fn main() -> Result(Nil, Nil) {
   // Run simulation
   list.range(0, time)
-  |> list.fold(Ok(m), buy_or_sell)
+  |> list.fold(init_market(), buy_or_sell)
   |> result.try(chart)
 }
