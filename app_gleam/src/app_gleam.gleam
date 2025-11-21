@@ -62,12 +62,17 @@ fn replace_x(l, old_value, new_value) {
 fn buy(m: Market, time_idx) -> Result(Market, Nil) {
   // Get the best price to buy at
   use ask_price <- result.try(min(m.selling))
+  use min_history <- result.try(set_nth_element(
+    m.min_history,
+    time_idx,
+    ask_price,
+  ))
   use max_buying <- result.map(max(m.buying))
 
   Market(
     ..m,
     selling: replace_x(m.selling, ask_price, spread() + max_buying),
-    min_history: set_nth_element(m.min_history, time_idx, ask_price),
+    min_history:,
     delta: ask_price - m.last_price,
   )
 }
@@ -75,22 +80,30 @@ fn buy(m: Market, time_idx) -> Result(Market, Nil) {
 fn sell(m: Market, time_idx) -> Result(Market, Nil) {
   // Get the best price to sell to
   use bid_price <- result.try(list.reduce(m.buying, int.max))
+  // Record transaction
+  use max_history <- result.try(set_nth_element(
+    m.max_history,
+    time_idx,
+    bid_price,
+  ))
+
   use min_selling <- result.map(list.reduce(m.selling, int.min))
 
   Market(
     ..m,
     // Replace used offer with a new one via artificial spread
     buying: replace_x(m.buying, bid_price, spread() + min_selling),
-    // Record transaction
-    max_history: set_nth_element(m.max_history, time_idx, bid_price),
+    max_history:,
     delta: bid_price - m.last_price,
   )
 }
 
-fn set_nth_element(l: List(a), i: Int, v: a) -> List(a) {
-  echo #(i, v)
-  let assert #(first, [_, ..rest]) = list.split(l, i)
-  list.append(first, [v, ..rest])
+fn set_nth_element(l: List(a), i: Int, v: a) -> Result(List(a), Nil) {
+  let #(first, second) = list.split(l, i)
+  case second {
+    [] -> Error(Nil)
+    [_nth, ..rest] -> Ok(list.append(first, [v, ..rest]))
+  }
 }
 
 fn chart(m: Market) -> Result(Nil, Nil) {
