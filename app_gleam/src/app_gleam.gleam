@@ -1,12 +1,16 @@
+import gleam/float
 import gleam/int
 import gleam/io
 import gleam/list
+import gleam/string
 
-const time = 100
+// This doesn't work completely, but oh well. It could probably be simpler
+
+const time = 10
 
 const number_of_offers = 10
 
-pub fn offer_margin() -> Int {
+fn offer_margin() -> Int {
   int.random(10)
 }
 
@@ -78,6 +82,16 @@ fn buy(market: Market, time_idx: Int) -> Market {
   Market(..market, selling:)
 }
 
+fn sell(market: Market, time_idx: Int) -> Market {
+  // Get the best price to sell to
+  let price = max(market.buying)
+  let buying = remove_first_occurrence(market.buying, price)
+  let market = exchange(market, price, time_idx)
+  // Replenish offer with a new one
+  let buying = [offer_margin() + max(market.buying), ..buying]
+  Market(..market, buying:)
+}
+
 fn nth_element(list: List(a), i: Int) -> a {
   assert i >= 0
   let assert [first, ..rest] = list
@@ -124,6 +138,65 @@ fn exchange(market: Market, price: Int, time_idx: Int) -> Market {
   )
 }
 
+fn chart(m: Market) {
+  let history = list.zip(m.min_history, m.max_history)
+
+  // Get height needed to fit chart
+  let chart_height =
+    history
+    |> list.map(fn(r) {
+      let #(first, sec) = r
+      int.max(first, sec)
+    })
+    |> max
+
+  let chart_text =
+    history
+    // Paint chart intervals
+    |> list.map(fn(v) {
+      let #(from, to) = v
+      list.reverse(
+        list.map(list.range(1, chart_height), fn(x) {
+          case x {
+            x if x > from && x < to -> "|"
+            x if x == from || x == to -> "+"
+            _ -> " "
+          }
+        }),
+      )
+    })
+    |> list.transpose
+    // Paint y axis
+    |> list.map(fn(col) { ["|", ..col] })
+    // Paint x axis
+    |> list.append([
+      list.range(0, time + 1) |> list.map(fn(_) { "-" }),
+    ])
+    // Make matrix into plain text
+    |> list.map(fn(row) { string.concat(row) })
+    |> string.join("\n")
+
+  io.print("\n\n" <> chart_text)
+}
+
 pub fn main() -> Nil {
-  io.println("Hello from app_gleam!")
+  let m = init_market()
+
+  // Run simulation
+  list.repeat(0, time)
+  |> list.fold(m, fn(m, t) {
+    // Decision
+    case float.random() {
+      x if x <. 0.5 -> buy(m, t)
+      _ -> sell(m, t)
+    }
+    |> fn(m1) {
+      // Tendency, to make it more divergent
+      case m1.delta <= 0 {
+        True -> buy(m1, t) |> buy(t)
+        False -> sell(m1, t) |> sell(t)
+      }
+    }
+  })
+  |> chart
 }
