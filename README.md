@@ -29,8 +29,7 @@ Example result:
 - ⬜️ prolog
 - ⬜️ lisp
 - ⬜️ elixir
-- ⬜️ clojure
-- ⬜️ nim
+- ⬜️ gleam
 - ⬜️ c++
 - ⬜️ nix
 - ✅ rust
