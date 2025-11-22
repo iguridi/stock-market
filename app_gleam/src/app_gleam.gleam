@@ -45,7 +45,8 @@ fn replace_x(l, old_value, new_value) {
   }
 }
 
-fn buy(m: Market, time_idx) -> Result(Market, Nil) {
+fn buy(m: Result(Market, Nil), time_idx) -> Result(Market, Nil) {
+  use m <- result.try(m)
   // Get the best price to buy at
   use ask_price <- result.try(min(m.selling))
   use min_history <- result.try(set_nth_element(
@@ -59,7 +60,8 @@ fn buy(m: Market, time_idx) -> Result(Market, Nil) {
   Ok(Market(..m, selling:, min_history:, delta: ask_price - m.last_price))
 }
 
-fn sell(m: Market, time_idx) -> Result(Market, Nil) {
+fn sell(m: Result(Market, Nil), time_idx) -> Result(Market, Nil) {
+  use m <- result.try(m)
   // Get the best price to sell to
   use bid_price <- result.try(max(m.buying))
   // Record transaction
@@ -103,22 +105,21 @@ fn initial_state() -> Result(Market, Nil) {
 }
 
 fn run_simulation(m: Market) {
-  let decision = fn(m, t) {
+  let decision = fn(m3, t) {
     case float.random() {
-      x if x <. 0.5 -> buy(m, t)
-      _ -> sell(m, t)
+      x if x <. 0.5 -> buy(m3, t)
+      _ -> sell(m3, t)
     }
   }
   let add_divergence = fn(m: Result(Market, Nil), t) {
     use m1 <- result.try(m)
     case m1.delta <= 0 {
-      True -> buy(m1, t) |> result.try(fn(m) { buy(m, t) })
-      False -> sell(m1, t) |> result.try(fn(m) { sell(m, t) })
+      True -> buy(m, t) |> buy(t)
+      False -> sell(m, t) |> sell(t)
     }
   }
   list.fold(list.range(0, time), Ok(m), fn(acc, t) {
-    use m <- result.try(acc)
-    decision(m, t) |> add_divergence(t)
+    decision(acc, t) |> add_divergence(t)
   })
 }
 
