@@ -88,85 +88,77 @@ fn set_nth_element(l: List(a), i: Int, v: a) -> Result(List(a), Nil) {
   }
 }
 
-pub fn main() -> Result(Nil, Nil) {
-  // Initial state
-  use market <- result.try({
-    let buying =
-      list.repeat(0, number_of_offers)
-      |> list.map(fn(_) { int.random(25) })
-    let selling =
-      list.repeat(0, number_of_offers)
-      |> list.map(fn(_) { int.random(25) + 25 })
-    let max_history = list.repeat(0, time + 1)
-    let min_history = list.repeat(100, time + 1)
+fn initial_state() -> Result(Market, Nil) {
+  let buying =
+    list.repeat(0, number_of_offers)
+    |> list.map(fn(_) { int.random(25) })
+  let selling =
+    list.repeat(0, number_of_offers)
+    |> list.map(fn(_) { int.random(25) + 25 })
+  let max_history = list.repeat(0, time + 1)
+  let min_history = list.repeat(100, time + 1)
 
-    use last_price <- result.try(min(selling))
-    Ok(Market(buying, selling, max_history, min_history, last_price, 0))
-  })
+  use last_price <- result.try(min(selling))
+  Ok(Market(buying, selling, max_history, min_history, last_price, 0))
+}
 
-  // Run simulation
-  use final_state <- result.try({
-    list.fold(list.range(0, time), Ok(market), fn(acc, t) {
-      use m <- result.try(acc)
-      // Decision
-      use m1 <- result.try(case float.random() {
-        x if x <. 0.5 -> buy(m, t)
-        _ -> sell(m, t)
-      })
+fn run_simulation(m: Market) {
+  list.fold(list.range(0, time), Ok(m), fn(acc, t) {
+    use m <- result.try(acc)
 
-      // Tendency, to make it more divergent
-      use m2 <- result.try(case m1.delta <= 0 {
-        True -> buy(m1, t)
-        False -> sell(m1, t)
-      })
-      case m2.delta <= 0 {
-        True -> buy(m2, t)
-        False -> sell(m2, t)
+    // Decision
+    case float.random() {
+      x if x <. 0.5 -> buy(m, t)
+      _ -> sell(m, t)
+    }
+    // Tendency, to make it more divergent
+    |> result.try(fn(m1) {
+      case m1.delta <= 0 {
+        True -> buy(m1, t) |> result.try(fn(m) { buy(m, t) })
+        False -> sell(m1, t) |> result.try(fn(m) { sell(m, t) })
       }
     })
   })
+}
 
-  // Chart
-  {
-    use history <- result.try(list.strict_zip(
-      final_state.min_history,
-      final_state.max_history,
-    ))
-    assert list.length(history) == time + 1
+fn chart(m: Market) {
+  use history <- result.try(list.strict_zip(m.min_history, m.max_history))
+  assert list.length(history) == time + 1
 
-    // Get height needed to fit chart
-    use chart_height <- result.map(
-      max(list.append(final_state.min_history, final_state.max_history)),
-    )
+  // Get height needed to fit chart
+  use chart_height <- result.map(max(list.append(m.min_history, m.max_history)))
 
-    let chart_text =
-      history
-      // Paint chart intervals
-      |> list.map(fn(v) {
-        let #(from, to) = v
-        list.range(1, chart_height)
-        |> list.map(fn(x) {
-          case x {
-            x if x > from && x < to -> "|"
-            x if x == from || x == to -> "+"
-            _ -> " "
-          }
-        })
+  let chart_text =
+    history
+    // Paint chart intervals
+    |> list.map(fn(v) {
+      let #(from, to) = v
+      list.range(1, chart_height)
+      |> list.map(fn(x) {
+        case x {
+          x if x > from && x < to -> "|"
+          x if x == from || x == to -> "+"
+          _ -> " "
+        }
       })
-      // Organize data to final position in matrix
-      |> list.map(list.reverse)
-      |> list.transpose
-      // Paint y axis
-      |> list.map(fn(col) { ["|", ..col] })
-      // Paint x axis
-      |> list.append([
-        list.range(0, time + 1) |> list.map(fn(_) { "-" }),
-      ])
-      // Make matrix into plain text
-      |> list.map(fn(row) { string.concat(row) })
-      |> string.join("\n")
+    })
+    // Organize data to final position in matrix
+    |> list.map(list.reverse)
+    |> list.transpose
+    // Paint y axis
+    |> list.map(fn(col) { ["|", ..col] })
+    // Paint x axis
+    |> list.append([
+      list.range(0, time + 1) |> list.map(fn(_) { "-" }),
+    ])
+    // Make matrix into plain text
+    |> list.map(fn(row) { string.concat(row) })
+    |> string.join("\n")
 
-    io.print("\n\n" <> chart_text)
-    Nil
-  }
+  io.print("\n\n" <> chart_text)
+  Nil
+}
+
+pub fn main() -> Result(Nil, Nil) {
+  initial_state() |> result.try(run_simulation) |> result.try(chart)
 }
