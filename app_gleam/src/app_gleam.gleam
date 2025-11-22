@@ -103,21 +103,22 @@ fn initial_state() -> Result(Market, Nil) {
 }
 
 fn run_simulation(m: Market) {
-  list.fold(list.range(0, time), Ok(m), fn(acc, t) {
-    use m <- result.try(acc)
-
-    // Decision
+  let decision = fn(m, t) {
     case float.random() {
       x if x <. 0.5 -> buy(m, t)
       _ -> sell(m, t)
     }
-    // Tendency, to make it more divergent
-    |> result.try(fn(m1) {
-      case m1.delta <= 0 {
-        True -> buy(m1, t) |> result.try(fn(m) { buy(m, t) })
-        False -> sell(m1, t) |> result.try(fn(m) { sell(m, t) })
-      }
-    })
+  }
+  let add_divergence = fn(m: Result(Market, Nil), t) {
+    use m1 <- result.try(m)
+    case m1.delta <= 0 {
+      True -> buy(m1, t) |> result.try(fn(m) { buy(m, t) })
+      False -> sell(m1, t) |> result.try(fn(m) { sell(m, t) })
+    }
+  }
+  list.fold(list.range(0, time), Ok(m), fn(acc, t) {
+    use m <- result.try(acc)
+    decision(m, t) |> add_divergence(t)
   })
 }
 
@@ -125,35 +126,39 @@ fn chart(m: Market) {
   use history <- result.try(list.strict_zip(m.min_history, m.max_history))
   assert list.length(history) == time + 1
 
-  // Get height needed to fit chart
   use chart_height <- result.map(max(list.append(m.min_history, m.max_history)))
 
-  let chart_text =
-    history
-    // Paint chart intervals
-    |> list.map(fn(v) {
-      let #(from, to) = v
-      list.range(1, chart_height)
-      |> list.map(fn(x) {
-        case x {
-          x if x > from && x < to -> "|"
-          x if x == from || x == to -> "+"
-          _ -> " "
-        }
-      })
+  let paint_intervals = fn(v) {
+    let #(from, to) = v
+    list.range(1, chart_height)
+    |> list.map(fn(x) {
+      case x {
+        x if x > from && x < to -> "|"
+        x if x == from || x == to -> "+"
+        _ -> " "
+      }
     })
-    // Organize data to final position in matrix
-    |> list.map(list.reverse)
-    |> list.transpose
-    // Paint y axis
+  }
+  let fit_matrix = fn(v) { v |> list.map(list.reverse) |> list.transpose }
+  let paint_axis = fn(v) {
+    v
     |> list.map(fn(col) { ["|", ..col] })
-    // Paint x axis
     |> list.append([
       list.range(0, time + 1) |> list.map(fn(_) { "-" }),
     ])
-    // Make matrix into plain text
+  }
+  let to_plain_text = fn(v) {
+    v
     |> list.map(fn(row) { string.concat(row) })
     |> string.join("\n")
+  }
+
+  let chart_text =
+    history
+    |> list.map(paint_intervals)
+    |> fit_matrix
+    |> paint_axis
+    |> to_plain_text
 
   io.print("\n\n" <> chart_text)
   Nil
